@@ -5,7 +5,7 @@ import { APP_IMAGES, APP_VIDEOS } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useRef } from 'react';
 
-const InstructionPage = ({ onStart }) => {
+const InstructionPage = ({ isActive = true, onStart }) => {
   const { t, lang } = useLanguage();
   const { isPageVisible } = useGameState();
   const videoRef = useRef(null);
@@ -20,7 +20,7 @@ const InstructionPage = ({ onStart }) => {
   });
 
   return (
-    <div className="page active instruction-page-container">
+    <div className={`page instruction-page-container ${isActive ? 'active' : ''}`}>
       <video
         ref={videoRef}
         className="fluid-bg"

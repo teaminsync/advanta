@@ -1,47 +1,56 @@
 export const APP_IMAGES = {
-  frame: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987188/frame_z8diw9.png',
-  formFarmer: 'https://res.cloudinary.com/dfkraqvyy/image/upload/f_auto,q_auto,w_800/v1774699714/Farmer_pointing_fingers_uzkvc5.png',
-  bgFallback: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987108/BG_ndaicp.png',
-  buttonPrimary: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987103/Button_2_clkrap.png',
-  buttonSecondary: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987108/Button_1_jkg2sk.png',
-  inputPanel: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987179/Name_and_number_pannel_f1d4th.png',
-  volumeButton: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987183/Volume_Button_rbcsnh.png',
-  settingsBg: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987180/Settings_BG_ik5m31.png',
-  actionButtonBg: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774523406/Button_BG_fardp7.png',
-  arrowIcon: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774523136/Arrow_jrjqre.png',
-  homeIcon: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774523369/house_ocng7f.png',
-  pauseIcon: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774523369/Pause_Button_cpdxc1.png',
-  playIcon: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774523369/Play_Button_nqnjfw.png',
-  soundIcon: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774523370/Sound_Button_symrhl.png',
-  letterButton: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987103/Buttons_for_letters_jupmbj.png',
-  wrongAnswerButton: 'https://res.cloudinary.com/dfkraqvyy/image/upload/f_auto,q_auto,w_800/v1774699815/Wrong_Answer_Button_PNG_kkhd7o.png',
-  correctOrb: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987104/Correct_answer_BG_gqw0az.png',
-  wrongOrb: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774523136/Wrong_Answer_BG_v03itp.png',
-  happinessBar: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987176/Happiness_Meter_BG_c9f90p.png',
-  timerBg: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1773987181/Timer_BG_jlcuv2.png',
-  glow: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774637484/Glow-Photoroom_byo0ks.png',
-  logo: 'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1774093674/Jumbo_Super_logo_psi21w.png',
+  frame: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459776/frame_ualhd5.png',
+  formFarmer: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775439055/Farmer_pointing_sz8tpb_1_td11ku.png',
+  bgFallback: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459769/BG_hexnsc.png',
+  bgFallbackCropped: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459770/BG_crop_sur0tc.png',
+  buttonPrimary: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459770/Button_2_w3nauu.png',
+  buttonSecondary: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459770/Button_1_dzr6ar.png',
+  inputPanel: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459774/Name_and_number_pannel_w4wx6m.png',
+  volumeButton: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459773/Volume_Button_ytkrww.png',
+  settingsBg: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459376/Settings_BG_ro3usk.png',
+  actionButtonBg: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459526/Button_BG_rohd7d.png',
+  arrowIcon: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775460148/Arrow_xyd32j.png',
+  homeIcon: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459526/house_auasvz.png',
+  pauseIcon: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459527/Pause_Button_zmtlnr.png',
+  playIcon: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459527/Play_Button_blqa04.png',
+  soundIcon: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459527/Sound_Button_rarwwt.png',
+  letterButton: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459770/Buttons_for_letters_xconf2.png',
+  wrongAnswerButton: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775460184/Wrong_Answer_Button_PNG_nfipup.png',
+  correctOrb: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459376/Correct_answer_BG_emioqd.png',
+  wrongOrb: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775460213/Wrong_Answer_BG_bydgtu.png',
+  happinessBar: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459376/Happiness_Meter_BG_kahnnm.png',
+  timerBg: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775459376/Timer_BG_ovvv2q.png',
+  glow: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775460241/Glow-Photoroom_ynths4.png',
+  logo: 'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775460288/Jumbo_Super_logo_wdwo1s.png',
 };
 
 export const LEVEL_BACKGROUNDS = [
-  'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1775007667/Frame_5_end_orxgvl_1_lf4cpa.png',
-  'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1775007408/Frame_6_end_litact_1_ybvzyo.png',
-  'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1775007576/Frame_7_end_kbmw1m_1_zigpxg.png',
-  'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1775007318/Frame_8_end_a0vnf9_1_fge55h.png',
-  'https://res.cloudinary.com/dbyrmzuuw/image/upload/f_auto,q_auto,w_800/v1775007473/Frame_9_end_lxlgct_1_nzvbw3.png',
+  'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775439045/Frame_5_end_orxgvl_1_ihpemp.png',
+  'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775439047/Frame_6_end_litact_1_seyary.png',
+  'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775439045/Frame_7_end_kbmw1m_1_gl1uxz.png',
+  'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775439049/Frame_8_end_a0vnf9_1_sbdgoe.png',
+  'https://res.cloudinary.com/doaw2nfrp/image/upload/f_auto,q_auto,w_800/v1775439048/Frame_9_end_lxlgct_1_zdbqug.png',
 ];
 
+// Use merged videos with built-in background music for ALL platforms
+// This ensures consistent audio experience across iOS, Android, and Desktop
+// All videos use Cloudinary optimizations (q_auto/f_auto) for best performance
 export const APP_VIDEOS = {
-  intro: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006304/Frame_1_Video_compressed_2_alcqta.mp4',
-  languageBg: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006303/Bg_compressed_1_wegcua.mp4',
-  challengeIntro: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006304/Frame_5_video_compressed_1_j69rjz.mp4',
-  transitionQ2: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006304/Frame_6_video_compressed_1_clzjmq.mp4',
-  transitionQ3: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006303/Frame_7_video_compressed_1_et7pco.mp4',
-  transitionQ4: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006304/Frame_8_video_compressed_1_atwxho.mp4',
-  transitionQ5: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006301/Frame_9_video_compressed_1_cudzb1.mp4',
-  finalTransition: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006301/Frame_10_video_compressed_1_kycqta.mp4',
-  postAnimationTransition: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006302/FRame_11_compressed_1_jnr9wm.mp4',
-  end: 'https://res.cloudinary.com/dfkraqvyy/video/upload/v1775006300/Frame_12_compressed_1_fkv40u.mp4',
+  intro: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_auto/f_auto/v1775468799/Frame_1_IPhone_otzyv8.mp4',
+  languageBg: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_auto/f_auto/v1775460683/Bg_compressed_1_fectii.mp4',
+  challengeIntro: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502680/Frame_5_with_BGM_rigllf.mp4',
+  transitionQ2: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502673/Frame_6_with_BGM_e6emia.mp4',
+  transitionQ3: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502679/Frame_7_with_BGM_mvw6ft.mp4',
+  transitionQ4: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502677/Frame_8_with_BGM_omdddw.mp4',
+  transitionQ5: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502673/Frame_9_with_BGM_jr4uth.mp4',
+  finalTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502682/Frame_10_with_BGM_qqwir2.mp4',
+  postAnimationTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502692/Frame_11_with_BGM_qki7by.mp4',
+  end: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502706/Frame_12_with_BGM_oevxb3.mp4',
+};
+
+// No longer need platform-specific overrides - all videos have merged audio
+export const getPreferredVideoSrc = (src) => {
+  return src;
 };
 
 export const LEVEL_TRANSITION_VIDEOS = [
@@ -52,17 +61,18 @@ export const LEVEL_TRANSITION_VIDEOS = [
 ];
 
 export const APP_AUDIO = {
-  music: '/assets/Audio/Music/This%20Background%20Music.mp3',
-  timer: '/assets/Audio/SFX/Timer.mp3?v=1',
-  correct: '/assets/Audio/SFX/correct-answer.mp3?v=1',
-  wrong: '/assets/Audio/SFX/Wrong.mp3?v=1',
-  timeOver: '/assets/Audio/SFX/Time%20Over.mp3?v=1',
+  music: 'https://res.cloudinary.com/doaw2nfrp/video/upload/v1775439018/This_Background_Music_lokdsh.mp3',
+  correct: 'https://res.cloudinary.com/doaw2nfrp/video/upload/v1775460401/correct-answer_ersukl.mp3',
+  wrong: 'https://res.cloudinary.com/doaw2nfrp/video/upload/v1775439017/Wrong_whmvbg.mp3',
+  timeOver: 'https://res.cloudinary.com/doaw2nfrp/video/upload/v1775439017/Time_Over_hqbmpd.mp3',
+  timer: 'https://res.cloudinary.com/doaw2nfrp/video/upload/v1775439017/Timer_tn7dmt.mp3',
 };
 
 export const PRELOAD_IMAGES = [
   APP_IMAGES.frame,
   APP_IMAGES.formFarmer,
   APP_IMAGES.bgFallback,
+  APP_IMAGES.bgFallbackCropped,
   APP_IMAGES.buttonPrimary,
   APP_IMAGES.buttonSecondary,
   APP_IMAGES.inputPanel,

@@ -1,31 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import './FinalAnimationPage.css';
 import './ChallengePage.css';
-import { APP_IMAGES, APP_VIDEOS } from '../config/media';
-import ScreenLoadingOverlay from '../components/ScreenLoadingOverlay';
-import { useScreenMediaReady } from '../hooks/useScreenMediaReady';
+import { APP_IMAGES } from '../config/media';
 
-const FinalAnimationPage = ({ onComplete }) => {
-  const backgroundSrc = 'https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987192/Frame_10_end_nmhghb.png';
-  const [shouldProceed, setShouldProceed] = useState(false);
-  const { isReady } = useScreenMediaReady([
-    { id: 'post-animation-transition', type: 'video', src: APP_VIDEOS.postAnimationTransition },
-    { id: 'end-video', type: 'video', src: APP_VIDEOS.end },
-  ]);
-
-  useEffect(() => {
-    if (shouldProceed && isReady) {
-      onComplete();
-    }
-  }, [isReady, onComplete, shouldProceed]);
+const FinalAnimationPage = ({ isActive = true, onComplete }) => {
+  const backgroundSrc = 'https://res.cloudinary.com/doaw2nfrp/image/upload/v1775460333/Frame_10_end_efufdl.png';
 
   const handleProceed = () => {
-    if (shouldProceed) return;
-    setShouldProceed(true);
+    onComplete();
   };
 
   return (
-    <div className="page active final-animation-container">
+    <div className={`page final-animation-container ${isActive ? 'active' : ''}`}>
       <img
         src={backgroundSrc}
         alt="background"
@@ -55,7 +41,6 @@ const FinalAnimationPage = ({ onComplete }) => {
           />
         </button>
       </div>
-      <ScreenLoadingOverlay visible={shouldProceed && !isReady} />
     </div>
   );
 };

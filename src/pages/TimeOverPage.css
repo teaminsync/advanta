@@ -34,7 +34,7 @@
   width: min(100%, 25rem);
   min-height: clamp(320px, 52dvh, 500px);
   height: auto;
-  background: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987188/frame_z8diw9.png') no-repeat center;
+  background: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775459776/frame_ualhd5.png') no-repeat center;
   background-size: 100% 100%;
   display: flex;
   align-items: center;
@@ -61,7 +61,7 @@
 }
 
 .continue-btn {
-  background: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987103/Button_2_clkrap.png') no-repeat center;
+  background: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775459770/Button_2_w3nauu.png') no-repeat center;
   background-size: 100% 100%;
   border: none;
   width: clamp(160px, 50vw, 220px);

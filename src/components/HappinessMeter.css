@@ -24,7 +24,7 @@
 .happiness-meter-bar-wrapper {
   width: 100%;
   height: clamp(26px, 5.6vw, 42px);
-  background-image: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987176/Happiness_Meter_BG_c9f90p.png');
+  background-image: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775459376/Happiness_Meter_BG_kahnnm.png');
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
@@ -36,7 +36,7 @@
   top: 50%;
   width: clamp(18px, 4.5vw, 28px);
   height: clamp(54px, 11vw, 76px);
-  background: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1774523135/Safalta_ractangualr_h9cqk3.png') no-repeat center;
+  background: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775460362/Safalta_ractangualr_vdsq9i.png') no-repeat center;
   background-size: 100% 100%;
   transform: translateX(-50%);
   transition: left 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);

@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage, useGameState } from '../context/LanguageContext';
 import './EndPage.css';
-import { APP_VIDEOS } from '../config/media';
+import { APP_VIDEOS, getPreferredVideoSrc } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useRef } from 'react';
 
-const EndPage = ({ onProceed }) => {
-  const { t } = useLanguage();
-  const { shouldMuteAll, isPageVisible, hasUserInteracted, isIOSLikeDevice } = useGameState();
+const EndPage = ({ isActive = true, onProceed }) => {
+  const { t, isIOSLikeDevice } = useLanguage();
+  const { shouldMuteAll, isPageVisible, hasUserInteracted } = useGameState();
   const [isVideoEnded, setIsVideoEnded] = useState(false);
   const videoRef = useRef(null);
-  const shouldMuteVideo = shouldMuteAll || !hasUserInteracted || isIOSLikeDevice;
+  const shouldMuteVideo = shouldMuteAll || !hasUserInteracted;
+  const videoSrc = getPreferredVideoSrc(APP_VIDEOS.end, isIOSLikeDevice);
 
   useManagedVideoPlayback({
     videoRef,
@@ -19,17 +20,22 @@ const EndPage = ({ onProceed }) => {
     shouldMute: shouldMuteVideo,
   });
 
+  const handleVideoEnd = () => {
+    setIsVideoEnded(true);
+  };
+
   return (
-    <div className="page active end-page-container">
+    <div className={`page end-page-container ${isActive ? 'active' : ''}`}>
       <video
         ref={videoRef}
-        src={APP_VIDEOS.end}
+        src={videoSrc}
         className="end-video-bg"
         autoPlay
         muted={shouldMuteVideo}
         playsInline
         preload="auto"
-        onEnded={() => setIsVideoEnded(true)}
+        onEnded={handleVideoEnd}
+        onError={() => {}}
       />
 
       {isVideoEnded && (

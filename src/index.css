@@ -131,15 +131,17 @@ select {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.35s ease;
   contain: layout paint size style;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
 }
 
 .page.active {
+  z-index: 10;
+  pointer-events: auto;
   opacity: 1;
-  visibility: visible;
 }
 
 .overlay {

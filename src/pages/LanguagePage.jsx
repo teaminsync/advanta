@@ -4,7 +4,7 @@ import './LanguagePage.css';
 import { APP_IMAGES, APP_VIDEOS } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 
-const LanguagePage = ({ onComplete }) => {
+const LanguagePage = ({ isActive = true, onComplete }) => {
   const { lang, setLang } = useLanguage();
   const { isMuted, setIsMuted, shouldMuteAll, isPageVisible } = useGameState();
   const videoRef = useRef(null);
@@ -16,8 +16,19 @@ const LanguagePage = ({ onComplete }) => {
     shouldMute: shouldMuteAll,
   });
 
+  const handleLanguageSelect = (selectedLang) => {
+    setLang(selectedLang);
+    
+    // Start background music on language selection (guaranteed user gesture)
+    if (typeof window !== 'undefined' && window.startBackgroundMusic) {
+      window.startBackgroundMusic();
+    }
+    
+    onComplete();
+  };
+
   return (
-    <div className="page active lang-page-container">
+    <div className={`page lang-page-container ${isActive ? 'active' : ''}`}>
       <video
         ref={videoRef}
         className="fluid-bg"
@@ -53,7 +64,7 @@ const LanguagePage = ({ onComplete }) => {
           <div className="lang-buttons-container">
             <button
               className={`lang-option-btn ${lang === 'hi' ? 'active-lang' : ''}`}
-              onClick={() => { setLang('hi'); onComplete(); }}
+              onClick={() => handleLanguageSelect('hi')}
             >
               <div className="lang-option-bg"></div>
               <div className="lang-option-content">
@@ -64,7 +75,7 @@ const LanguagePage = ({ onComplete }) => {
 
             <button
               className={`lang-option-btn ${lang === 'pa' ? 'active-lang' : ''}`}
-              onClick={() => { setLang('pa'); onComplete(); }}
+              onClick={() => handleLanguageSelect('pa')}
             >
               <div className="lang-option-bg"></div>
               <div className="lang-option-content">

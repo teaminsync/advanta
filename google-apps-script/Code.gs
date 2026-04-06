@@ -6,16 +6,18 @@ function getSheet_() {
 }
 
 function getPayload_(e) {
+  // Try to parse JSON body first
   var rawBody = e && e.postData && e.postData.contents ? e.postData.contents : '';
-
+  
   if (rawBody) {
     try {
       return JSON.parse(rawBody);
     } catch (error) {
-      // Fall back to standard form fields when the request is not JSON.
+      // Not JSON, fall through to form parameters
     }
   }
-
+  
+  // Fall back to form parameters
   return e && e.parameter ? e.parameter : {};
 }
 
@@ -23,22 +25,28 @@ function doPost(e) {
   try {
     var sheet = getSheet_();
     var data = getPayload_(e);
+    
     var name = (data.name || '').toString().trim();
     var phone = (data.phoneNumber || data.phone || '').toString().trim();
     var district = (data.district || '').toString().trim();
     var state = (data.state || '').toString().trim();
-
+    var status = (data.status || 'lose').toString().trim();
+    
+    // Validate that we have at least some data
     if (!name && !phone && !district && !state) {
       return ContentService
         .createTextOutput(JSON.stringify({ ok: false, message: 'No data received' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
-
-    sheet.appendRow([name, phone, district, state]);
-
+    
+    // Append row with timestamp
+    var timestamp = new Date();
+    sheet.appendRow([timestamp, name, phone, district, state, status]);
+    
     return ContentService
-      .createTextOutput(JSON.stringify({ ok: true }))
+      .createTextOutput(JSON.stringify({ ok: true, message: 'Data saved successfully' }))
       .setMimeType(ContentService.MimeType.JSON);
+      
   } catch (error) {
     return ContentService
       .createTextOutput(JSON.stringify({ ok: false, error: String(error) }))
@@ -47,5 +55,6 @@ function doPost(e) {
 }
 
 function doGet(e) {
+  // Support GET requests for testing
   return doPost(e);
 }

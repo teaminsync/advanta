@@ -56,7 +56,7 @@
   width: clamp(45px, 12vw, 60px);
   height: clamp(45px, 12vw, 60px);
   flex-shrink: 0;
-  background-image: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987180/Settings_BG_ik5m31.png');
+  background-image: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775459376/Settings_BG_ro3usk.png');
   background-size: 100% 100%;
   display: flex;
   align-items: center;
@@ -115,7 +115,7 @@
 }
 
 .question-wood-banner {
-  background: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987108/Button_1_jkg2sk.png') no-repeat center;
+  background: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775459770/Button_1_dzr6ar.png') no-repeat center;
   background-size: 100% 100%;
   width: min(100%, 20rem);
   min-height: clamp(68px, 11vh, 96px);
@@ -150,7 +150,7 @@
   -webkit-appearance: none;
   appearance: none;
   background-color: transparent;
-  background-image: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987103/Buttons_for_letters_jupmbj.png');
+  background-image: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775459770/Buttons_for_letters_xconf2.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -186,7 +186,7 @@
 
 .wrong-tile-btn {
   background-color: transparent;
-  background-image: url('https://res.cloudinary.com/dfkraqvyy/image/upload/v1774699815/Wrong_Answer_Button_PNG_kkhd7o.png');
+  background-image: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775460184/Wrong_Answer_Button_PNG_nfipup.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -274,7 +274,7 @@
   z-index: 20;
   width: clamp(140px, 40vw, 200px);
   height: clamp(140px, 40vw, 200px);
-  background: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987104/Correct_answer_BG_gqw0az.png') no-repeat center;
+  background: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775459376/Correct_answer_BG_emioqd.png') no-repeat center;
   background-size: 100% 100%;
   display: flex;
   align-items: center;
@@ -289,7 +289,7 @@
   z-index: 20;
   width: clamp(200px, 62vw, 360px);
   aspect-ratio: 1;
-  background: url('https://res.cloudinary.com/dbyrmzuuw/image/upload/v1774523136/Wrong_Answer_BG_v03itp.png') no-repeat center;
+  background: url('https://res.cloudinary.com/doaw2nfrp/image/upload/v1775460213/Wrong_Answer_BG_bydgtu.png') no-repeat center;
   background-size: 100% 100%;
   display: flex;
   align-items: center;

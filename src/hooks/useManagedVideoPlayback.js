@@ -32,14 +32,33 @@ export const useManagedVideoPlayback = ({ videoRef, isPageVisible, shouldPlay = 
         return;
       }
 
+      if (currentVideo.readyState < 2) {
+        // Not enough data yet, the loadeddata/canplay event listeners will retry
+        return;
+      }
+
+      // Don't call play() if already playing - prevents iOS NotAllowedError when unmuting
+      // Check AFTER setting muted attribute, as changing muted can briefly pause the video
+      if (!currentVideo.paused) {
+        return;
+      }
+
       const playPromise = currentVideo.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          retryTimeoutId = window.setTimeout(() => {
-            if (!videoRef.current || !shouldPlay || !isPageVisible) return;
-            videoRef.current.play().catch(() => {});
-          }, 150);
-        });
+        playPromise
+          .then(() => {})
+          .catch((err) => {
+            // Handle AbortError (play interrupted) - retry after delay
+            if (err.name === 'AbortError') {
+              retryTimeoutId = window.setTimeout(() => {
+                if (!videoRef.current || !shouldPlay || !isPageVisible) return;
+                const retryPromise = videoRef.current.play();
+                if (retryPromise) {
+                  retryPromise.catch(() => {});
+                }
+              }, 200);
+            }
+          });
       }
     };
 

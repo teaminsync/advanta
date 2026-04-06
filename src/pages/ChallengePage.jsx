@@ -7,11 +7,8 @@ import './ChallengePage.css';
 import '../components/ScrollUI.css';
 import { APP_AUDIO, APP_IMAGES, LEVEL_BACKGROUNDS } from '../config/media';
 
-const timerAudio = (typeof window !== 'undefined' && typeof Audio !== 'undefined') ? new Audio(APP_AUDIO.timer) : null;
-const correctAudio = (typeof window !== 'undefined' && typeof Audio !== 'undefined') ? new Audio(APP_AUDIO.correct) : null;
-const wrongAudio = (typeof window !== 'undefined' && typeof Audio !== 'undefined') ? new Audio(APP_AUDIO.wrong) : null;
-
 const ChallengePage = ({
+  isActive = true,
   currentLevel,
   happinessScore,
   setHappinessScore,
@@ -33,16 +30,22 @@ const ChallengePage = ({
   const [isShaking, setIsShaking] = useState(false);
   const [highlightedOption, setHighlightedOption] = useState(null);
   const [showTimeoutOverlay, setShowTimeoutOverlay] = useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [wrongSelectionsThisLevel, setWrongSelectionsThisLevel] = useState([]);
   const [timedOutOption, setTimedOutOption] = useState(null);
+  const [successOption, setSuccessOption] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
   const timerIntervalRef = useRef(null);
   const highlightTimeoutRef = useRef(null);
   const timeoutContinueRef = useRef(null);
+  const successContinueRef = useRef(null);
   const onWrongAnswerRef = useRef(onWrongAnswer);
   const wasAutoPausedRef = useRef(false);
   const highlightRemainingRef = useRef(5000);
   const highlightStartedAtRef = useRef(null);
+  const timerAudioRef = useRef(null);
+  const correctAudioRef = useRef(null);
+  const wrongAudioRef = useRef(null);
 
   const levels = t.levels;
   const gridOptions = t.gridOptions;
@@ -52,72 +55,55 @@ const ChallengePage = ({
     onWrongAnswerRef.current = onWrongAnswer;
   }, [onWrongAnswer]);
 
-  useEffect(() => () => {
-    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
-    if (timeoutContinueRef.current) clearTimeout(timeoutContinueRef.current);
-    [timerAudio, correctAudio, wrongAudio].forEach((audio) => {
-      if (!audio) return;
-      audio.pause();
-      audio.currentTime = 0;
-    });
+  useEffect(() => {
+    // Create audio elements on mount
+    if (typeof window !== 'undefined' && typeof Audio !== 'undefined') {
+      timerAudioRef.current = new Audio(APP_AUDIO.timer);
+      correctAudioRef.current = new Audio(APP_AUDIO.correct);
+      wrongAudioRef.current = new Audio(APP_AUDIO.wrong);
+
+      timerAudioRef.current.preload = 'auto';
+      correctAudioRef.current.preload = 'auto';
+      wrongAudioRef.current.preload = 'auto';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
+      if (timeoutContinueRef.current) clearTimeout(timeoutContinueRef.current);
+
+      [timerAudioRef.current, correctAudioRef.current, wrongAudioRef.current].forEach((audio) => {
+        if (!audio) return;
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
+        audio.load();
+      });
+
+      timerAudioRef.current = null;
+      correctAudioRef.current = null;
+      wrongAudioRef.current = null;
+    };
   }, []);
 
-  useEffect(() => {
-    if (!highlightedOption) {
-      highlightRemainingRef.current = 5000;
-      highlightStartedAtRef.current = null;
-      if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current);
-        highlightTimeoutRef.current = null;
-      }
-      return undefined;
-    }
-
-    if (isPaused) {
-      if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current);
-        highlightTimeoutRef.current = null;
-      }
-
-      if (highlightStartedAtRef.current !== null) {
-        const elapsed = Date.now() - highlightStartedAtRef.current;
-        highlightRemainingRef.current = Math.max(0, highlightRemainingRef.current - elapsed);
-        highlightStartedAtRef.current = null;
-      }
-
-      return undefined;
-    }
-
-    highlightStartedAtRef.current = Date.now();
-    highlightTimeoutRef.current = setTimeout(() => {
-      highlightTimeoutRef.current = null;
-      highlightStartedAtRef.current = null;
-      highlightRemainingRef.current = 5000;
-      setHighlightedOption(null);
-      onLevelComplete();
-    }, highlightRemainingRef.current);
-
-    return () => {
-      if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current);
-        highlightTimeoutRef.current = null;
-      }
-    };
-  }, [highlightedOption, isPaused, onLevelComplete]);
+  // This effect is no longer needed - onLevelComplete is called immediately in handleChoose
+  // Keeping the cleanup for safety but the timeout logic is removed
 
   useEffect(() => {
     setShowTimeoutOverlay(false);
+    setShowSuccessOverlay(false);
     setWrongSelectionsThisLevel([]);
     setHighlightedOption(null);
     setTimedOutOption(null);
+    setSuccessOption(null);
     setTimer(10);
     setIsPaused(false);
   }, [currentLevel]);
 
   useEffect(() => {
     if (!isPageVisible) {
-      if (!isPaused && !highlightedOption && !showTimeoutOverlay) {
+      if (!isPaused && !highlightedOption && !showTimeoutOverlay && !showSuccessOverlay) {
         wasAutoPausedRef.current = true;
         setIsPaused(true);
       }
@@ -128,12 +114,11 @@ const ChallengePage = ({
       wasAutoPausedRef.current = false;
       setIsPaused(false);
     }
-  }, [highlightedOption, isPageVisible, isPaused, showTimeoutOverlay]);
+  }, [highlightedOption, isPageVisible, isPaused, showTimeoutOverlay, showSuccessOverlay]);
 
   useEffect(() => {
-    [timerAudio, correctAudio, wrongAudio].forEach((audio) => {
+    [timerAudioRef.current, correctAudioRef.current, wrongAudioRef.current].forEach((audio) => {
       if (!audio) return;
-      audio.preload = 'auto';
       audio.muted = shouldMuteAll;
       if (shouldMuteAll) {
         audio.pause();
@@ -148,6 +133,27 @@ const ChallengePage = ({
       setIsGamePaused(false);
     };
   }, [isPaused, setIsGamePaused]);
+
+  useEffect(() => {
+    if (!showSuccessOverlay || isPaused) return undefined;
+
+    successContinueRef.current = setTimeout(() => {
+      if (successContinueRef.current) {
+        clearTimeout(successContinueRef.current);
+        successContinueRef.current = null;
+      }
+      setShowSuccessOverlay(false);
+      setSuccessOption(null);
+      onLevelComplete();
+    }, 3000); // 3 second delay for success
+
+    return () => {
+      if (successContinueRef.current) {
+        clearTimeout(successContinueRef.current);
+        successContinueRef.current = null;
+      }
+    };
+  }, [showSuccessOverlay, isPaused, onLevelComplete]);
 
   useEffect(() => {
     if (!showTimeoutOverlay || isPaused) return undefined;
@@ -175,17 +181,17 @@ const ChallengePage = ({
   }, [showTimeoutOverlay, isPaused, timedOutOption, currentLevel, onLevelComplete, setBubbleTrail]);
 
   useEffect(() => {
-    if (challengeStage !== 'action' || highlightedOption || showTimeoutOverlay || isPaused || timer <= 0) {
+    if (challengeStage !== 'action' || highlightedOption || showTimeoutOverlay || showSuccessOverlay || isPaused || timer <= 0) {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      if (timerAudio) timerAudio.pause();
+      if (timerAudioRef.current) timerAudioRef.current.pause();
       return undefined;
     }
 
-    if (timerAudio) {
-      timerAudio.loop = true;
-      timerAudio.currentTime = 0;
+    if (timerAudioRef.current) {
+      timerAudioRef.current.loop = true;
+      timerAudioRef.current.currentTime = 0;
       if (!shouldMuteAll) {
-        const playPromise = timerAudio.play();
+        const playPromise = timerAudioRef.current.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {});
         }
@@ -199,10 +205,10 @@ const ChallengePage = ({
         }
 
         clearInterval(timerIntervalRef.current);
-        if (timerAudio) timerAudio.pause();
-        if (wrongAudio && !shouldMuteAll) {
-          wrongAudio.currentTime = 0;
-          const playPromise = wrongAudio.play();
+        if (timerAudioRef.current) timerAudioRef.current.pause();
+        if (wrongAudioRef.current && !shouldMuteAll) {
+          wrongAudioRef.current.currentTime = 0;
+          const playPromise = wrongAudioRef.current.play();
           if (playPromise !== undefined) {
             playPromise.catch(() => {});
           }
@@ -218,9 +224,9 @@ const ChallengePage = ({
 
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      if (timerAudio) timerAudio.pause();
+      if (timerAudioRef.current) timerAudioRef.current.pause();
     };
-  }, [challengeStage, highlightedOption, showTimeoutOverlay, isPaused, timer, shouldMuteAll, currentData]);
+  }, [challengeStage, highlightedOption, showTimeoutOverlay, showSuccessOverlay, isPaused, timer, shouldMuteAll, currentData]);
 
   if (!currentData) return null;
 
@@ -252,7 +258,8 @@ const ChallengePage = ({
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
     if (timeoutContinueRef.current) clearTimeout(timeoutContinueRef.current);
-    [timerAudio, correctAudio, wrongAudio].forEach((audio) => {
+    if (successContinueRef.current) clearTimeout(successContinueRef.current);
+    [timerAudioRef.current, correctAudioRef.current, wrongAudioRef.current].forEach((audio) => {
       if (!audio) return;
       audio.pause();
       audio.currentTime = 0;
@@ -263,26 +270,28 @@ const ChallengePage = ({
 
   const handleChoose = (event, value) => {
     event.stopPropagation();
-    if (challengeStage !== 'action' || highlightedOption || isPaused || showTimeoutOverlay) return;
+    if (challengeStage !== 'action' || highlightedOption || isPaused || showTimeoutOverlay || showSuccessOverlay) return;
 
     if (value === currentData.correct) {
-      if (timerAudio) timerAudio.pause();
+      if (timerAudioRef.current) timerAudioRef.current.pause();
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
       setHighlightedOption(value);
       setHappinessScore((prev) => prev + 10);
       onCorrectAnswer(value);
 
-      if (correctAudio && !shouldMuteAll) {
-        correctAudio.currentTime = 0;
-        const playPromise = correctAudio.play();
+      if (correctAudioRef.current && !shouldMuteAll) {
+        correctAudioRef.current.currentTime = 0;
+        const playPromise = correctAudioRef.current.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {});
         }
       }
 
       updateBubbleTrailForCurrentLevel({ value, type: 'correct' });
-      highlightRemainingRef.current = 5000;
-      highlightStartedAtRef.current = null;
+      
+      // Show success overlay with big circle, then transition after delay
+      setSuccessOption(value);
+      setShowSuccessOverlay(true);
       return;
     }
 
@@ -290,9 +299,9 @@ const ChallengePage = ({
     const hasReachedWrongLimit = nextWrongSelections.length >= 3;
 
     setIsShaking(true);
-    if (wrongAudio && !shouldMuteAll) {
-      wrongAudio.currentTime = 0;
-      const playPromise = wrongAudio.play();
+    if (wrongAudioRef.current && !shouldMuteAll) {
+      wrongAudioRef.current.currentTime = 0;
+      const playPromise = wrongAudioRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {});
       }
@@ -303,9 +312,9 @@ const ChallengePage = ({
 
     if (hasReachedWrongLimit) {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      if (timerAudio) {
-        timerAudio.pause();
-        timerAudio.currentTime = 0;
+      if (timerAudioRef.current) {
+        timerAudioRef.current.pause();
+        timerAudioRef.current.currentTime = 0;
       }
       setHappinessScore(0);
       setTimedOutOption(currentData.correct);
@@ -317,13 +326,13 @@ const ChallengePage = ({
   };
 
   return (
-    <div className="page active challenge-page-container">
+    <div className={`page challenge-page-container ${isActive ? 'active' : ''}`}>
       <img
         key={`bg-${currentLevel}`}
         src={LEVEL_BACKGROUNDS[currentLevel] || LEVEL_BACKGROUNDS[0]}
         alt="background"
         className="fluid-bg"
-        loading="lazy"
+        loading="eager"
         decoding="async"
       />
 
@@ -378,11 +387,11 @@ const ChallengePage = ({
             </div>
           )}
 
-          {highlightedOption && (
+          {highlightedOption && showSuccessOverlay && (
             <div className="success-overlay-container">
               <img src={APP_IMAGES.glow} alt="Glow effect" className="rotating-glow" loading="lazy" decoding="async" />
               <div className="massive-orb">
-                {highlightedOption}
+                {successOption}
               </div>
             </div>
           )}
@@ -397,14 +406,14 @@ const ChallengePage = ({
 
         </div>
 
-        {(visibleBubbleTrail.length > 0 || timedOutOption || (highlightedOption && currentLevelBubble)) && (
+        {(visibleBubbleTrail.length > 0 || timedOutOption || (highlightedOption && currentLevelBubble && !showSuccessOverlay)) && (
           <div className="collected-bubbles-tray single-bubble-tray">
             {visibleBubbleTrail.map((item, index) => (
               <div key={`${item.type}-${index}`} className={item.type === 'correct' ? 'correct-bubble-indicator' : 'wrong-bubble-indicator'}>
                 {item.value}
               </div>
             ))}
-            {highlightedOption && currentLevelBubble && (
+            {highlightedOption && currentLevelBubble && !showSuccessOverlay && (
               <div key={`highlighted-current-${currentLevel}`} className={currentLevelBubble.type === 'correct' ? 'correct-bubble-indicator' : 'wrong-bubble-indicator'}>
                 {currentLevelBubble.value}
               </div>

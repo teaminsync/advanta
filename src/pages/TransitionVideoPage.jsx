@@ -1,18 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useGameState } from '../context/LanguageContext';
+import { useLanguage, useGameState } from '../context/LanguageContext';
 import HappinessMeter from '../components/HappinessMeter';
 import SettingsMenu from '../components/SettingsMenu';
 import './TransitionVideoPage.css';
 import './ChallengePage.css';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
-import { APP_IMAGES, APP_VIDEOS } from '../config/media';
+import { APP_IMAGES, APP_VIDEOS, getPreferredVideoSrc } from '../config/media';
 
-const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQuestion, onNextQuestion, bubbleTrail, happinessScore, showArrows = true, showControls = false, onRestartGame, initialSeekTime = 0 }) => {
+const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVideo, onPreviousQuestion, onNextQuestion, bubbleTrail, happinessScore, showArrows = true, showControls = false, onRestartGame, initialSeekTime = 0, shouldStartUnmuted = false }) => {
   const videoRef = useRef(null);
   const hasAppliedInitialSeekRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
-  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted, isIOSLikeDevice } = useGameState();
-  const shouldMuteVideo = shouldMuteAll || !hasUserInteracted || isIOSLikeDevice;
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const { isIOSLikeDevice } = useLanguage();
+  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted } = useGameState();
+  const shouldMuteVideo = shouldMuteAll || !hasUserInteracted;
+  const preferredVideoSrc = getPreferredVideoSrc(videoSrc, isIOSLikeDevice);
+  
+  // If coming from user gesture (shouldStartUnmuted), start unmuted. Otherwise start muted.
+  // But always respect shouldMuteAll (user clicked mute button)
+  const shouldStartMuted = !shouldStartUnmuted;
+  const shouldMuteNow = shouldMuteAll || shouldStartMuted;
+  
+  // Reset video ready state when video source changes
+  useEffect(() => {
+    setIsVideoReady(false);
+  }, [preferredVideoSrc]);
+  
   const replayStartTimeByVideo = {
     [APP_VIDEOS.transitionQ2]: 6,
     [APP_VIDEOS.transitionQ3]: 8,
@@ -25,8 +39,8 @@ const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQues
   useManagedVideoPlayback({
     videoRef,
     isPageVisible,
-    shouldPlay: Boolean(videoSrc) && !isPaused,
-    shouldMute: shouldMuteVideo,
+    shouldPlay: Boolean(videoSrc) && !isPaused && isVideoReady,
+    shouldMute: shouldMuteNow,
   });
 
   const handleVideoEnd = () => {
@@ -64,7 +78,9 @@ const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQues
   const applyInitialSeekTime = () => {
     const videoElement = videoRef.current;
 
-    if (!videoElement || initialSeekTime <= 0) return;
+    if (!videoElement || initialSeekTime <= 0) {
+      return;
+    }
     if (hasAppliedInitialSeekRef.current) return;
     if (videoElement.readyState < 1) return;
 
@@ -91,6 +107,8 @@ const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQues
   }, [videoSrc, initialSeekTime, isPaused, isPageVisible]);
 
   const handleReplayCurrentVideo = () => {
+    if (isPaused) return; // Don't allow navigation while paused
+
     const videoElement = videoRef.current;
 
     if (showControls && onPreviousQuestion) {
@@ -110,23 +128,47 @@ const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQues
     }
   };
 
+  const handleNextQuestion = () => {
+    if (isPaused) return; // Don't allow navigation while paused
+    
+    if (onNextQuestion) {
+      onNextQuestion();
+    } else if (onSkipVideo) {
+      onSkipVideo();
+    } else {
+      onComplete();
+    }
+  };
+
   return (
-    <div className="page active transition-video-page">
+    <div className={`page transition-video-page ${isActive ? 'active' : ''}`}>
       <video
-        key={`${videoSrc}-${initialSeekTime}`}
+        key={`${preferredVideoSrc}-${initialSeekTime}`}
         ref={videoRef}
         className="transition-video"
-        src={videoSrc}
+        style={{ opacity: isVideoReady ? 1 : 0, transition: 'opacity 0.3s ease-in-out' }}
+        src={preferredVideoSrc}
         autoPlay
         controls={false}
-        muted={shouldMuteVideo}
+        muted={shouldStartMuted}
         playsInline
         disablePictureInPicture
         preload="auto"
-        onLoadedMetadata={applyInitialSeekTime}
-        onLoadedData={applyInitialSeekTime}
-        onCanPlay={applyInitialSeekTime}
+        onLoadedMetadata={() => {
+          applyInitialSeekTime();
+        }}
+        onLoadedData={() => {
+          applyInitialSeekTime();
+        }}
+        onCanPlay={() => {
+          applyInitialSeekTime();
+        }}
+        onCanPlayThrough={() => {
+          setIsVideoReady(true);
+          applyInitialSeekTime();
+        }}
         onEnded={handleVideoEnd}
+        onError={() => {}}
       />
 
       {showControls && (
@@ -164,8 +206,8 @@ const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQues
             className="video-arrow-btn"
             onClick={handleReplayCurrentVideo}
             style={{
-              opacity: 1,
-              pointerEvents: 'auto',
+              opacity: isPaused ? 0.5 : 1,
+              pointerEvents: isPaused ? 'none' : 'auto',
             }}
           >
             <img src={APP_IMAGES.arrowIcon} alt="previous question" className="video-arrow-icon" />
@@ -173,7 +215,11 @@ const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQues
           <button
             type="button"
             className="video-arrow-btn"
-            onClick={onNextQuestion || onSkipVideo || onComplete}
+            onClick={handleNextQuestion}
+            style={{
+              opacity: isPaused ? 0.5 : 1,
+              pointerEvents: isPaused ? 'none' : 'auto',
+            }}
           >
             <img src={APP_IMAGES.arrowIcon} alt="next question" className="video-arrow-icon mirrored" />
           </button>

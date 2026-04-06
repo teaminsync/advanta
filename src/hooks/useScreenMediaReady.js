@@ -30,8 +30,7 @@ export const useScreenMediaReady = (mediaItems = []) => {
 
     stableItems.forEach((item) => {
       const preloadPromise = item.type === 'video' ? preloadVideo(item.src) : preloadImage(item.src);
-      preloadPromise.then((didLoad) => {
-        if (!didLoad || !active) return;
+      preloadPromise.then(() => {
         if (!active) return;
         setLoadedMap((prev) => (prev[item.id] ? prev : { ...prev, [item.id]: true }));
       });

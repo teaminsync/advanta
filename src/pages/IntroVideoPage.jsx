@@ -1,22 +1,39 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import './IntroVideoPage.css';
-import { APP_VIDEOS } from '../config/media';
-import ScreenLoadingOverlay from '../components/ScreenLoadingOverlay';
-import { useScreenMediaReady } from '../hooks/useScreenMediaReady';
+import { APP_VIDEOS, getPreferredVideoSrc } from '../config/media';
+import { useLanguage } from '../context/LanguageContext';
 import { useGameState } from '../context/LanguageContext';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useVideoLoadingState } from '../hooks/useVideoLoadingState';
 
-const IntroVideoPage = ({ onComplete }) => {
+const IntroVideoPage = ({ isActive = true, onComplete }) => {
   const videoRef = useRef(null);
-  const { isReady, markAssetLoaded } = useScreenMediaReady([{ id: 'intro-video', type: 'video', src: APP_VIDEOS.intro }]);
+  const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
+  const { isIOSLikeDevice, isLowPowerMode } = useLanguage();
+  const videoSrc = getPreferredVideoSrc(APP_VIDEOS.intro, isIOSLikeDevice);
   const { isPageVisible, hasUserInteracted } = useGameState();
-  const { isVideoLoading, videoLoadingHandlers } = useVideoLoadingState(APP_VIDEOS.intro);
+  const { isVideoLoading, videoLoadingHandlers } = useVideoLoadingState(videoSrc);
+
+  // On iOS, ensure muted is set as DOM property immediately (React bug workaround)
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      videoRef.current.defaultMuted = true;
+    }
+  }, []);
+
+  // On iOS, trigger video load on first user interaction
+  useEffect(() => {
+    if (isIOSLikeDevice && hasUserInteracted && videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play().catch(() => {});
+    }
+  }, [hasUserInteracted, isIOSLikeDevice]);
 
   useManagedVideoPlayback({
     videoRef,
     isPageVisible,
-    shouldPlay: !isVideoLoading && hasUserInteracted,
+    shouldPlay: !isVideoLoading,
     shouldMute: true,
   });
 
@@ -24,33 +41,67 @@ const IntroVideoPage = ({ onComplete }) => {
     onComplete();
   };
 
+  const handleManualPlay = () => {
+    if (videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
+  const handleVideoPlaying = () => {
+    setHasStartedPlaying(true);
+    videoLoadingHandlers.onPlaying();
+    
+    // Try to start background music when video starts playing (has user gesture context)
+    if (typeof window !== 'undefined' && window.startBackgroundMusic) {
+      window.startBackgroundMusic();
+    }
+  };
+
   return (
-    <div className="intro-video-page">
+    <div className={`page intro-video-page ${isActive ? 'active' : ''}`}>
       <video
         ref={videoRef}
         className="intro-video"
-        src={APP_VIDEOS.intro}
-        style={{ visibility: !isReady || isVideoLoading ? 'hidden' : 'visible' }}
+        src={videoSrc}
+        autoPlay
         controls={false}
         muted
         playsInline
         disablePictureInPicture
         preload="auto"
+        onLoadStart={() => {}}
+        onLoadedMetadata={() => {}}
         onLoadedData={() => {
-          markAssetLoaded('intro-video');
           videoLoadingHandlers.onLoadedData();
         }}
-        onCanPlay={videoLoadingHandlers.onCanPlay}
-        onCanPlayThrough={videoLoadingHandlers.onCanPlayThrough}
-        onPlaying={videoLoadingHandlers.onPlaying}
-        onWaiting={videoLoadingHandlers.onWaiting}
-        onStalled={videoLoadingHandlers.onStalled}
-        onSeeking={videoLoadingHandlers.onSeeking}
-        onEmptied={videoLoadingHandlers.onEmptied}
-        onSuspend={videoLoadingHandlers.onSuspend}
+        onCanPlay={() => {
+          videoLoadingHandlers.onCanPlay();
+        }}
+        onCanPlayThrough={() => {
+          videoLoadingHandlers.onCanPlayThrough();
+        }}
+        onPlaying={handleVideoPlaying}
+        onWaiting={() => {
+          videoLoadingHandlers.onWaiting();
+        }}
+        onStalled={() => {
+          videoLoadingHandlers.onStalled();
+        }}
+        onSeeking={() => {
+          videoLoadingHandlers.onSeeking();
+        }}
+        onEmptied={() => {
+          videoLoadingHandlers.onEmptied();
+        }}
+        onSuspend={() => {
+          videoLoadingHandlers.onSuspend();
+        }}
         onEnded={handleVideoEnd}
+        onError={() => {
+          if (videoLoadingHandlers?.onCanPlay) videoLoadingHandlers.onCanPlay();
+        }}
       />
-      <ScreenLoadingOverlay visible={!isReady || isVideoLoading} />
     </div>
   );
 };

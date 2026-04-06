@@ -1,6 +1,7 @@
-import React, { createContext, useEffect, useState, useContext } from 'react';
+import React, { createContext, useEffect, useState, useContext, useCallback } from 'react';
 import hi from '../locales/hi';
 import pa from '../locales/pa';
+import { useLowPowerMode } from '../hooks/useLowPowerMode';
 
 const translations = {
   hi,
@@ -27,9 +28,11 @@ export function LanguageProvider({ children }) {
   const [isGamePaused, setIsGamePaused] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [isIOSLikeDevice] = useState(detectIOSLikeDevice);
+  const isLowPowerMode = useLowPowerMode();
   const [isPageVisible, setIsPageVisible] = useState(() => (
     typeof document === 'undefined' ? true : !document.hidden
   ));
+  const [onFirstInteractionCallback, setOnFirstInteractionCallback] = useState(null);
 
   const t = translations[lang];
   const shouldMuteAll = isMuted || !isPageVisible;
@@ -51,30 +54,57 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
+    if (hasUserInteracted) return undefined; // Already interacted, skip setup
 
-    const markInteracted = () => {
+    const markInteracted = (event) => {
       setHasUserInteracted(true);
+      
+      // Call the callback synchronously within the gesture context
+      if (onFirstInteractionCallback) {
+        onFirstInteractionCallback();
+      }
+      
+      // Remove all listeners immediately
+      interactionEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, markInteracted, { capture: true });
+      });
     };
 
     const interactionEvents = ['pointerdown', 'touchstart', 'click', 'keydown'];
     interactionEvents.forEach((eventName) => {
-      window.addEventListener(eventName, markInteracted, { once: true, passive: true });
+      window.removeEventListener(eventName, markInteracted, { capture: true }); // Clean first
+      window.addEventListener(eventName, markInteracted, { capture: true, once: true });
     });
 
     return () => {
       interactionEvents.forEach((eventName) => {
-        window.removeEventListener(eventName, markInteracted);
+        window.removeEventListener(eventName, markInteracted, { capture: true });
       });
     };
-  }, []);
+  }, [onFirstInteractionCallback, hasUserInteracted]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
     document.documentElement.setAttribute('data-lang', lang);
   }, [lang]);
 
-  const stableValue = { lang, setLang, t, isIOSLikeDevice };
-  const gameStateValue = { isMuted, setIsMuted, isPageVisible, shouldMuteAll, isGamePaused, setIsGamePaused, hasUserInteracted };
+  const stableValue = { lang, setLang, t, isIOSLikeDevice, isLowPowerMode };
+  
+  // Memoize the callback setter to prevent infinite loops
+  const setCallbackMemoized = useCallback((callback) => {
+    setOnFirstInteractionCallback(() => callback);
+  }, []);
+  
+  const gameStateValue = { 
+    isMuted, 
+    setIsMuted, 
+    isPageVisible, 
+    shouldMuteAll, 
+    isGamePaused, 
+    setIsGamePaused, 
+    hasUserInteracted,
+    setOnFirstInteractionCallback: setCallbackMemoized
+  };
 
   return (
     <StableContext.Provider value={stableValue}>

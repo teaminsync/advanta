@@ -38,7 +38,7 @@ export const preloadAudio = (src) =>
 export const preloadVideo = (src) =>
   storePromise(`video:${src}`, () => new Promise((resolve) => {
     const video = document.createElement('video');
-    video.preload = 'metadata';
+    video.preload = 'auto'; // Changed from 'metadata' to 'auto' to load full video
     video.playsInline = true;
     video.muted = true;
     video.setAttribute('muted', '');
@@ -48,18 +48,19 @@ export const preloadVideo = (src) =>
     const finish = (didLoad) => {
       if (settled) return;
       settled = true;
-      video.removeAttribute('src');
-      video.load();
-      video.remove();
+      // Keep video element in DOM but hidden to maintain cache
+      video.style.display = 'none';
+      video.style.position = 'absolute';
+      video.style.pointerEvents = 'none';
       resolve(didLoad);
     };
 
-    video.addEventListener('loadedmetadata', () => finish(true), { once: true });
-    video.addEventListener('loadeddata', () => finish(true), { once: true });
+    // Wait for enough data to play through without buffering
+    video.addEventListener('canplaythrough', () => finish(true), { once: true });
     video.addEventListener('error', () => finish(false), { once: true });
     video.src = src;
     video.load();
-    setTimeout(() => finish(false), 5000);
+    setTimeout(() => finish(false), 15000); // Increased timeout for full video load
   }));
 
 export const preloadMediaBundle = ({ images = [], videos = [], audio = [] }) =>

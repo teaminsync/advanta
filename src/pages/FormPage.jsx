@@ -5,7 +5,7 @@ import { APP_IMAGES, APP_VIDEOS } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useRef } from 'react';
 
-const FormPage = ({ onSubmit }) => {
+const FormPage = ({ isActive = true, onSubmit }) => {
   const { t } = useLanguage();
   const { isPageVisible } = useGameState();
   const [name, setName] = useState('');
@@ -32,7 +32,7 @@ const FormPage = ({ onSubmit }) => {
   };
 
   return (
-    <div className="page active form-page-container">
+    <div className={`page form-page-container ${isActive ? 'active' : ''}`}>
       <video
         ref={videoRef}
         className="fluid-bg"

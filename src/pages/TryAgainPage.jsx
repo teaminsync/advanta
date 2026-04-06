@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useLanguage, useGameState } from '../context/LanguageContext';
+import { APP_IMAGES } from '../config/media';
 import './TryAgainPage.css';
 
 const TryAgainPage = ({ onRetry }) => {
@@ -28,7 +29,7 @@ const TryAgainPage = ({ onRetry }) => {
 
   return (
     <div className="page active try-again-container">
-      <img src="https://res.cloudinary.com/dbyrmzuuw/image/upload/v1773987108/BG_ndaicp.png" alt="background" className="fluid-bg" />
+      <img src={APP_IMAGES.bgFallbackCropped} alt="background" className="fluid-bg" />
       <div className="try-content-wrapper">
         <div className="try-frame-container">
           <div className="try-frame-content">
