@@ -1,12 +1,13 @@
 import React from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, useGameState } from '../context/LanguageContext';
 import './InstructionPage.css';
 import { APP_IMAGES, APP_VIDEOS } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useRef } from 'react';
 
 const InstructionPage = ({ onStart }) => {
-  const { t, lang, isPageVisible } = useLanguage();
+  const { t, lang } = useLanguage();
+  const { isPageVisible } = useGameState();
   const videoRef = useRef(null);
   const instructionBody1 = lang === 'pa'
     ? t.instructionBody1.replace(/ਮਨਜੀਤ/g, 'ਯਸ਼ਪਾਲ')
@@ -32,7 +33,7 @@ const InstructionPage = ({ onStart }) => {
       />
 
       <div className="instruction-board">
-        <img src={APP_IMAGES.frame} alt="board" className="board-bg" loading="eager" decoding="async" />
+        <img src={APP_IMAGES.frame} alt="board" className="board-bg" loading="lazy" decoding="async" />
 
         <div className="board-content instruction-board-content">
           <h1 className="instruction-title">{t.instructionTitleText}</h1>
@@ -45,7 +46,7 @@ const InstructionPage = ({ onStart }) => {
           </div>
 
           <button className="play-action-btn" onClick={onStart}>
-            <img src={APP_IMAGES.buttonPrimary} alt="play bg" className="btn-bg" loading="eager" decoding="async" />
+            <img src={APP_IMAGES.buttonPrimary} alt="play bg" className="btn-bg" loading="lazy" decoding="async" />
             <span className="btn-text">{t.playBtn}</span>
           </button>
         </div>

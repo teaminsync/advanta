@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, useGameState } from '../context/LanguageContext';
 import './EndPage.css';
 import { APP_VIDEOS } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useRef } from 'react';
 
 const EndPage = ({ onProceed }) => {
-  const { t, shouldMuteAll, isPageVisible, hasUserInteracted, isIOSLikeDevice } = useLanguage();
+  const { t } = useLanguage();
+  const { shouldMuteAll, isPageVisible, hasUserInteracted, isIOSLikeDevice } = useGameState();
   const [isVideoEnded, setIsVideoEnded] = useState(false);
   const videoRef = useRef(null);
   const shouldMuteVideo = shouldMuteAll || !hasUserInteracted || isIOSLikeDevice;

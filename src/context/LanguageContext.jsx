@@ -7,7 +7,8 @@ const translations = {
   pa
 };
 
-const LanguageContext = createContext();
+const StableContext = createContext();
+const GameStateContext = createContext();
 
 const detectIOSLikeDevice = () => {
   if (typeof navigator === 'undefined') return false;
@@ -72,13 +73,22 @@ export function LanguageProvider({ children }) {
     document.documentElement.setAttribute('data-lang', lang);
   }, [lang]);
 
+  const stableValue = { lang, setLang, t, isIOSLikeDevice };
+  const gameStateValue = { isMuted, setIsMuted, isPageVisible, shouldMuteAll, isGamePaused, setIsGamePaused, hasUserInteracted };
+
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t, isMuted, setIsMuted, isPageVisible, shouldMuteAll, isGamePaused, setIsGamePaused, hasUserInteracted, isIOSLikeDevice }}>
-      {children}
-    </LanguageContext.Provider>
+    <StableContext.Provider value={stableValue}>
+      <GameStateContext.Provider value={gameStateValue}>
+        {children}
+      </GameStateContext.Provider>
+    </StableContext.Provider>
   );
 }
 
 export function useLanguage() {
-  return useContext(LanguageContext);
+  return useContext(StableContext);
+}
+
+export function useGameState() {
+  return useContext(GameStateContext);
 }

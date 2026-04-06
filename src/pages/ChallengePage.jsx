@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, useGameState } from '../context/LanguageContext';
 import HappinessMeter from '../components/HappinessMeter';
 import Timer from '../components/Timer';
 import SettingsMenu from '../components/SettingsMenu';
@@ -25,7 +25,8 @@ const ChallengePage = ({
   bubbleTrail,
   setBubbleTrail,
 }) => {
-  const { t, shouldMuteAll, isMuted, setIsMuted, isPageVisible, setIsGamePaused } = useLanguage();
+  const { t } = useLanguage();
+  const { shouldMuteAll, isMuted, setIsMuted, isPageVisible, setIsGamePaused } = useGameState();
 
   const [challengeStage] = useState('action');
   const [timer, setTimer] = useState(10);
@@ -322,7 +323,7 @@ const ChallengePage = ({
         src={LEVEL_BACKGROUNDS[currentLevel] || LEVEL_BACKGROUNDS[0]}
         alt="background"
         className="fluid-bg"
-        loading="eager"
+        loading="lazy"
         decoding="async"
       />
 
@@ -379,7 +380,7 @@ const ChallengePage = ({
 
           {highlightedOption && (
             <div className="success-overlay-container">
-              <img src={APP_IMAGES.glow} alt="Glow effect" className="rotating-glow" loading="eager" decoding="async" />
+              <img src={APP_IMAGES.glow} alt="Glow effect" className="rotating-glow" loading="lazy" decoding="async" />
               <div className="massive-orb">
                 {highlightedOption}
               </div>

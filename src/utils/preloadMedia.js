@@ -50,6 +50,7 @@ export const preloadVideo = (src) =>
       settled = true;
       video.removeAttribute('src');
       video.load();
+      video.remove();
       resolve(didLoad);
     };
 

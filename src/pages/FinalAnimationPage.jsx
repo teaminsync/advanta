@@ -30,7 +30,7 @@ const FinalAnimationPage = ({ onComplete }) => {
         src={backgroundSrc}
         alt="background"
         className="fluid-bg"
-        loading="eager"
+        loading="lazy"
         decoding="async"
       />
 
@@ -41,7 +41,7 @@ const FinalAnimationPage = ({ onComplete }) => {
             src={APP_IMAGES.glow}
             alt="Glow effect"
             className="rotating-glow-final-image"
-            loading="eager"
+            loading="lazy"
             decoding="async"
           />
         </div>
@@ -50,7 +50,7 @@ const FinalAnimationPage = ({ onComplete }) => {
             src={APP_IMAGES.logo}
             alt="Jumbo Super Logo"
             className="jumbo-super-logo"
-            loading="eager"
+            loading="lazy"
             decoding="async"
           />
         </button>

@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, useGameState } from '../context/LanguageContext';
 import './TryAgainPage.css';
 
 const TryAgainPage = ({ onRetry }) => {
-  const { t, shouldMuteAll } = useLanguage();
+  const { t } = useLanguage();
+  const { shouldMuteAll } = useGameState();
   
   // Play buzz sound when page mounts
   const buzzAudioRef = useRef(typeof Audio !== 'undefined' ? new Audio("https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg") : null);

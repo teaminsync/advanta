@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useGameState } from '../context/LanguageContext';
 import './ChallengeIntroPage.css';
 import './TransitionVideoPage.css';
 import './ChallengePage.css';
@@ -12,7 +12,7 @@ import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 const ChallengeIntroPage = ({ onStart, onPrevious, onRestartGame, happinessScore, initialSeekTime = 0, navigationMode = 'flow' }) => {
   const videoRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
-  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted, isIOSLikeDevice } = useLanguage();
+  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted, isIOSLikeDevice } = useGameState();
   const shouldMuteVideo = shouldMuteAll || !hasUserInteracted || isIOSLikeDevice;
 
   useManagedVideoPlayback({

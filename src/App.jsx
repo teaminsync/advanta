@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import IntroVideoPage from './pages/IntroVideoPage';
-import LanguagePage from './pages/LanguagePage';
-import FormPage from './pages/FormPage';
-import InstructionPage from './pages/InstructionPage';
-import ChallengeIntroPage from './pages/ChallengeIntroPage';
-import ChallengePage from './pages/ChallengePage';
-import TransitionVideoPage from './pages/TransitionVideoPage';
-import EndPage from './pages/EndPage';
-import FinalAnimationPage from './pages/FinalAnimationPage';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import { LanguageProvider, useLanguage, useGameState } from './context/LanguageContext';
+const IntroVideoPage = lazy(() => import('./pages/IntroVideoPage'));
+const LanguagePage = lazy(() => import('./pages/LanguagePage'));
+const FormPage = lazy(() => import('./pages/FormPage'));
+const InstructionPage = lazy(() => import('./pages/InstructionPage'));
+const ChallengeIntroPage = lazy(() => import('./pages/ChallengeIntroPage'));
+const ChallengePage = lazy(() => import('./pages/ChallengePage'));
+const TransitionVideoPage = lazy(() => import('./pages/TransitionVideoPage'));
+const EndPage = lazy(() => import('./pages/EndPage'));
+const FinalAnimationPage = lazy(() => import('./pages/FinalAnimationPage'));
 import { APP_AUDIO, APP_IMAGES, APP_VIDEOS, LEVEL_TRANSITION_VIDEOS } from './config/media';
-import { preloadMediaBundle, preloadVideo } from './utils/preloadMedia';
+import { preloadVideo } from './utils/preloadMedia';
 
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzk7doqCW5yl04o4cZ_rDyGNFvFIlI5RUOSgZo-2CD0P-LMhBEpdf7UFbFML13F4mu-2A/exec';
 const NORMAL_FRAME_9_VIDEO = APP_VIDEOS.transitionQ5;
@@ -93,13 +93,7 @@ function AppContent() {
     };
   }, []);
 
-  useEffect(() => {
-    preloadMediaBundle({
-      images: [APP_IMAGES.frame, APP_IMAGES.buttonPrimary, APP_IMAGES.buttonSecondary, APP_IMAGES.inputPanel, APP_IMAGES.volumeButton],
-      videos: [APP_VIDEOS.intro, APP_VIDEOS.languageBg],
-      audio: [APP_AUDIO.music],
-    });
-  }, []);
+
 
   useEffect(() => {
     const upcomingVideoSources = [];
@@ -462,12 +456,12 @@ function AppContent() {
     }
   };
 
-  return renderPage();
+  return <Suspense fallback={<div />}>{renderPage()}</Suspense>;
 }
 
 function App() {
   const audioRef = useRef(null);
-  const { shouldMuteAll, isGamePaused, hasUserInteracted } = useLanguage();
+  const { shouldMuteAll, isGamePaused, hasUserInteracted } = useGameState();
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -478,11 +472,16 @@ function App() {
     audioElement.loop = true;
     audioElement.muted = shouldMuteAll;
 
+    let audioStartPending = false;
+
     const tryStartAudio = () => {
+      if (audioStartPending) return;
       if (!audioRef.current || shouldMuteAll || isGamePaused || !hasUserInteracted) return;
       if (!audioRef.current.paused) return;
 
+      audioStartPending = true;
       audioRef.current.play().catch(() => {});
+      setTimeout(() => { audioStartPending = false; }, 300);
     };
 
     audioElement.load();

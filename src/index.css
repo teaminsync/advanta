@@ -1,29 +1,34 @@
 @font-face {
   font-family: 'Baloo';
   src: url('/assets/fonts/Baloo-Regular.ttf') format('truetype');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'NotoSansGurmukhi';
   src: url('/assets/fonts/NotoSansGurmukhi-VariableFont_wdth,wght.ttf') format('truetype');
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'NotoSansDevanagari';
   src: url('/assets/fonts/NotoSansDevanagari-Regular.ttf') format('truetype');
   font-weight: 400;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'NotoSansDevanagari';
   src: url('/assets/fonts/NotoSansDevanagari-Bold.ttf') format('truetype');
   font-weight: 700;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Poppins';
   src: url('/assets/fonts/Poppins-Bold.ttf') format('truetype');
   font-weight: bold;
+  font-display: swap;
 }
 
 :root {

@@ -3,20 +3,20 @@ import './IntroVideoPage.css';
 import { APP_VIDEOS } from '../config/media';
 import ScreenLoadingOverlay from '../components/ScreenLoadingOverlay';
 import { useScreenMediaReady } from '../hooks/useScreenMediaReady';
-import { useLanguage } from '../context/LanguageContext';
+import { useGameState } from '../context/LanguageContext';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useVideoLoadingState } from '../hooks/useVideoLoadingState';
 
 const IntroVideoPage = ({ onComplete }) => {
   const videoRef = useRef(null);
   const { isReady, markAssetLoaded } = useScreenMediaReady([{ id: 'intro-video', type: 'video', src: APP_VIDEOS.intro }]);
-  const { isPageVisible } = useLanguage();
+  const { isPageVisible, hasUserInteracted } = useGameState();
   const { isVideoLoading, videoLoadingHandlers } = useVideoLoadingState(APP_VIDEOS.intro);
 
   useManagedVideoPlayback({
     videoRef,
     isPageVisible,
-    shouldPlay: !isVideoLoading,
+    shouldPlay: !isVideoLoading && hasUserInteracted,
     shouldMute: true,
   });
 
@@ -31,7 +31,6 @@ const IntroVideoPage = ({ onComplete }) => {
         className="intro-video"
         src={APP_VIDEOS.intro}
         style={{ visibility: !isReady || isVideoLoading ? 'hidden' : 'visible' }}
-        autoPlay
         controls={false}
         muted
         playsInline

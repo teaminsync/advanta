@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, useGameState } from '../context/LanguageContext';
 import './FormPage.css';
 import { APP_IMAGES, APP_VIDEOS } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useRef } from 'react';
 
 const FormPage = ({ onSubmit }) => {
-  const { t, isPageVisible } = useLanguage();
+  const { t } = useLanguage();
+  const { isPageVisible } = useGameState();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [district, setDistrict] = useState('');
@@ -44,10 +45,10 @@ const FormPage = ({ onSubmit }) => {
       />
 
       <div className="form-content-wrapper">
-        <img src={APP_IMAGES.formFarmer} alt="farmer" className="farmer-img-form" loading="eager" decoding="async" />
+        <img src={APP_IMAGES.formFarmer} alt="farmer" className="farmer-img-form" loading="lazy" decoding="async" />
 
         <div className="form-frame-wrapper">
-          <img src={APP_IMAGES.frame} alt="" className="form-frame-bg" loading="eager" decoding="async" />
+          <img src={APP_IMAGES.frame} alt="" className="form-frame-bg" loading="lazy" decoding="async" />
 
           <div className="form-board-content">
             <h2 className="form-title">{t.formPageTitle}</h2>
@@ -56,7 +57,7 @@ const FormPage = ({ onSubmit }) => {
               <div className="form-input-group">
                 <label className="form-label">{t.namePlaceholder}</label>
                 <div className="input-bg-container">
-                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="eager" decoding="async" />
+                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="lazy" decoding="async" />
                   <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
               </div>
@@ -64,7 +65,7 @@ const FormPage = ({ onSubmit }) => {
               <div className="form-input-group">
                 <label className="form-label">{t.phonePlaceholder}</label>
                 <div className="input-bg-container">
-                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="eager" decoding="async" />
+                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="lazy" decoding="async" />
                   <input type="tel" maxLength={10} className="form-input" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
               </div>
@@ -72,7 +73,7 @@ const FormPage = ({ onSubmit }) => {
               <div className="form-input-group">
                 <label className="form-label">{t.districtLabel}</label>
                 <div className="input-bg-container">
-                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="eager" decoding="async" />
+                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="lazy" decoding="async" />
                   <input type="text" className="form-input" value={district} onChange={(e) => setDistrict(e.target.value)} />
                 </div>
               </div>
@@ -80,14 +81,14 @@ const FormPage = ({ onSubmit }) => {
               <div className="form-input-group">
                 <label className="form-label">{t.stateLabel}</label>
                 <div className="input-bg-container">
-                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="eager" decoding="async" />
+                  <img src={APP_IMAGES.inputPanel} alt="" className="input-bg" loading="lazy" decoding="async" />
                   <input type="text" className="form-input" value={stateName} onChange={(e) => setStateName(e.target.value)} />
                 </div>
               </div>
             </div>
 
             <button className="submit-action-btn" onClick={handleSubmit}>
-              <img src={APP_IMAGES.buttonPrimary} alt="" className="btn-bg" loading="eager" decoding="async" />
+              <img src={APP_IMAGES.buttonPrimary} alt="" className="btn-bg" loading="lazy" decoding="async" />
               <span className="btn-text">{t.submitBtn}</span>
             </button>
           </div>

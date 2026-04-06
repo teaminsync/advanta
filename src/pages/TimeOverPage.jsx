@@ -1,10 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, useGameState } from '../context/LanguageContext';
 import './TimeOverPage.css';
 import { APP_AUDIO, APP_IMAGES } from '../config/media';
 
 const TimeOverPage = ({ onContinue }) => {
-  const { t, shouldMuteAll } = useLanguage();
+  const { t } = useLanguage();
+  const { shouldMuteAll } = useGameState();
   const audioRef = useRef(typeof window !== 'undefined' && typeof Audio !== 'undefined' ? new Audio(APP_AUDIO.timeOver) : null);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ const TimeOverPage = ({ onContinue }) => {
 
   return (
     <div className="page active time-over-container">
-      <img src={APP_IMAGES.bgFallback} alt="background" className="fluid-bg" loading="eager" decoding="async" />
+      <img src={APP_IMAGES.bgFallback} alt="background" className="fluid-bg" loading="lazy" decoding="async" />
       <div className="time-over-content-wrapper">
         <div className="time-over-frame-container">
           <div className="time-over-frame-content">

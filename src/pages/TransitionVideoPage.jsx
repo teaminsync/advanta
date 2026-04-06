@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useGameState } from '../context/LanguageContext';
 import HappinessMeter from '../components/HappinessMeter';
 import SettingsMenu from '../components/SettingsMenu';
 import './TransitionVideoPage.css';
@@ -11,7 +11,7 @@ const TransitionVideoPage = ({ videoSrc, onComplete, onSkipVideo, onPreviousQues
   const videoRef = useRef(null);
   const hasAppliedInitialSeekRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
-  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted, isIOSLikeDevice } = useLanguage();
+  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted, isIOSLikeDevice } = useGameState();
   const shouldMuteVideo = shouldMuteAll || !hasUserInteracted || isIOSLikeDevice;
   const replayStartTimeByVideo = {
     [APP_VIDEOS.transitionQ2]: 6,
