@@ -15,8 +15,14 @@ import videoPool from '../utils/videoPool';
  */
 const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVideo, onPreviousQuestion, onNextQuestion, bubbleTrail, happinessScore, showArrows = true, showControls = false, onRestartGame, initialSeekTime = 0, shouldStartUnmuted = false }) => {
   const controllerRef = useRef(null);
+  const onCompleteRef = useRef(onComplete);
   const [isPaused, setIsPaused] = useState(false);
   const hasCompletedRef = useRef(false); // Prevent multiple onComplete calls
+  
+  // Keep onComplete ref updated
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
   const { isIOSLikeDevice } = useLanguage();
   const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused } = useGameState();
   const preferredVideoSrc = getPreferredVideoSrc(videoSrc, isIOSLikeDevice);
@@ -44,6 +50,7 @@ const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVide
       return;
     }
 
+
     // Activate the video from the pool (instant - no loading!)
     const controller = videoPool.activate(preferredVideoSrc, {
       muted: shouldMuteNow,
@@ -51,7 +58,7 @@ const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVide
       onEnded: () => {
         if (isActive && !hasCompletedRef.current) {
           hasCompletedRef.current = true; // Mark as completed
-          onComplete();
+          onCompleteRef.current(); // Use ref to avoid dependency
         }
       },
       onReady: () => {
@@ -68,11 +75,12 @@ const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVide
         controller.hide();
       }
     };
-  }, [preferredVideoSrc, isActive, initialSeekTime, shouldMuteNow, onComplete]);
+  }, [preferredVideoSrc, isActive, initialSeekTime]); // Removed onComplete
 
   // Handle pause/resume
   useEffect(() => {
     if (!controllerRef.current) return;
+
 
     if (isPaused || !isPageVisible) {
       controllerRef.current.pause();

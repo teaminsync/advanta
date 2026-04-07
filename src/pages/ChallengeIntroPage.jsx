@@ -15,8 +15,14 @@ import videoPool from '../utils/videoPool';
  */
 const ChallengeIntroPage = ({ isActive = true, onStart, onRestartGame, happinessScore, initialSeekTime = 0, navigationMode = 'flow', shouldStartUnmuted = false }) => {
   const controllerRef = useRef(null);
+  const onStartRef = useRef(onStart);
   const [isPaused, setIsPaused] = useState(false);
   const hasCompletedRef = useRef(false); // Prevent multiple onStart calls
+  
+  // Keep onStart ref updated
+  useEffect(() => {
+    onStartRef.current = onStart;
+  }, [onStart]);
   const { isIOSLikeDevice } = useLanguage();
   const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused } = useGameState();
   const shouldStartMuted = !shouldStartUnmuted;
@@ -30,6 +36,7 @@ const ChallengeIntroPage = ({ isActive = true, onStart, onRestartGame, happiness
     
     if (!isActive) return;
 
+
     const controller = videoPool.activate(videoSrc, {
       muted: shouldMuteNow,
       startTime: initialSeekTime,
@@ -37,7 +44,7 @@ const ChallengeIntroPage = ({ isActive = true, onStart, onRestartGame, happiness
         if (navigationMode === 'browse') return;
         if (isActive && !hasCompletedRef.current) {
           hasCompletedRef.current = true;
-          onStart();
+          onStartRef.current(); // Use ref to avoid dependency
         }
       },
       onReady: () => {
@@ -53,7 +60,7 @@ const ChallengeIntroPage = ({ isActive = true, onStart, onRestartGame, happiness
         controller.hide();
       }
     };
-  }, [isActive, videoSrc, initialSeekTime, shouldMuteNow, navigationMode, onStart]);
+  }, [isActive, videoSrc, initialSeekTime, navigationMode]); // Removed onStart
 
   // Handle pause/resume
   useEffect(() => {

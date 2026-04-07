@@ -23,11 +23,9 @@ class VideoPool {
    */
   init() {
     if (this.initialized) {
-      console.log('🎬 Video pool already initialized');
       return;
     }
 
-    console.log('🎬 Initializing video pool...');
 
     // Create hidden container
     this.container = document.createElement('div');
@@ -48,11 +46,9 @@ class VideoPool {
       const slot = this.createSlot(i);
       this.pool.push(slot);
       this.container.appendChild(slot.element);
-      console.log(`🎬 Created video slot ${i}`);
     }
 
     this.initialized = true;
-    console.log('✅ Video pool initialized with 3 slots');
   }
 
   createSlot(index) {
@@ -118,21 +114,18 @@ class VideoPool {
     // Find an idle slot (not protected)
     let slot = this.pool.find(s => !protectedSlots.has(s) && s.status === 'idle');
     if (slot) {
-      console.log(`📍 Using idle slot ${slot.index}`);
       return slot;
     }
 
     // Find a ready slot (not protected, not active)
     slot = this.pool.find(s => !protectedSlots.has(s) && s.status === 'ready');
     if (slot) {
-      console.log(`📍 Using ready slot ${slot.index} (will overwrite)`);
       return slot;
     }
 
     // Last resort: use the oldest non-protected slot
     slot = this.pool.find(s => !protectedSlots.has(s));
     if (slot) {
-      console.log(`⚠️ Using non-protected slot ${slot.index} (last resort)`);
       return slot;
     }
     
@@ -155,14 +148,11 @@ class VideoPool {
     const existing = this.getSlotBySrc(src);
     if (existing) {
       if (existing.element.readyState >= 3) {
-        console.log(`✅ Video already loaded: ${videoName} (slot ${existing.index})`);
         return Promise.resolve(true);
       }
-      console.log(`⏳ Video already loading: ${videoName} (slot ${existing.index})`);
       // Still loading, return existing promise
       return new Promise((resolve) => {
         existing.element.addEventListener('canplaythrough', () => {
-          console.log(`✅ Video finished loading: ${videoName} (slot ${existing.index})`);
           resolve(true);
         }, { once: true });
       });
@@ -171,7 +161,6 @@ class VideoPool {
     // Get a slot and start loading
     const slot = this.getBestSlot();
     
-    console.log(`📥 Preloading video: ${videoName} into slot ${slot.index} (priority: ${priority})`);
     
     // Clean up previous assignment
     this.cleanupSlot(slot);
@@ -185,7 +174,6 @@ class VideoPool {
       const onReady = () => {
         if (slot.src === src) {
           slot.status = 'ready';
-          console.log(`✅ Video ready: ${videoName} (slot ${slot.index}, readyState: ${slot.element.readyState})`);
         }
         resolve(true);
       };
@@ -206,8 +194,9 @@ class VideoPool {
   }
 
   /**
-   * Activate a video for visible playback
-   * This is INSTANT because the video is already loaded and ready
+   * Activate a video for visible playback.
+   * Returns a controller with robust pause/resume that cancels ALL pending
+   * async play operations (seeked, canplay, setTimeout retries) when paused.
    */
   activate(src, options = {}) {
     if (!this.initialized) this.init();
@@ -222,12 +211,43 @@ class VideoPool {
 
     const videoName = src.substring(src.lastIndexOf('/') + 1, src.lastIndexOf('.'));
 
+    // ─── Controller-scoped pause state ────────────────────────────────────────
+    // Every async callback (seeked, canplay, setTimeout) reads this flag
+    // before calling play(). Setting it to true makes all pending operations
+    // no-ops, regardless of when they fire.
+    let controllerPaused = false;
+
+    // Track pending cleanup so we can cancel them on pause or unmount.
+    let pendingRetryTimeout = null;
+    let pendingSeekHandler = null;
+    let pendingCanplayHandler = null;
+
+    /**
+     * Cancel all in-flight async play operations.
+     * Safe to call multiple times.
+     */
+    const cancelPendingPlay = () => {
+      if (pendingRetryTimeout !== null) {
+        clearTimeout(pendingRetryTimeout);
+        pendingRetryTimeout = null;
+      }
+      if (pendingSeekHandler !== null) {
+        slot.element.removeEventListener('seeked', pendingSeekHandler);
+        pendingSeekHandler = null;
+      }
+      if (pendingCanplayHandler !== null) {
+        slot.element.removeEventListener('canplay', pendingCanplayHandler);
+        pendingCanplayHandler = null;
+      }
+    };
+
+    // ──────────────────────────────────────────────────────────────────────────
+
     // Find the slot with this video
     let slot = this.getSlotBySrc(src);
 
     if (!slot) {
       console.warn(`⚠️ Video not preloaded: ${videoName} - loading now (may cause delay)`);
-      // Not preloaded - load it now (will cause brief delay)
       slot = this.getBestSlot();
       this.cleanupSlot(slot);
       slot.src = src;
@@ -235,13 +255,13 @@ class VideoPool {
       slot.element.src = src;
       slot.element.load();
     } else {
-      console.log(`▶️ Activating video: ${videoName} (slot ${slot.index}, readyState: ${slot.element.readyState})`);
     }
 
     // Hide previous active slot
     if (this.activeSlot && this.activeSlot !== slot) {
-      const prevVideoName = this.activeSlot.src ? this.activeSlot.src.substring(this.activeSlot.src.lastIndexOf('/') + 1, this.activeSlot.src.lastIndexOf('.')) : 'unknown';
-      console.log(`⏸️ Hiding previous video: ${prevVideoName} (slot ${this.activeSlot.index})`);
+      const prevVideoName = this.activeSlot.src
+        ? this.activeSlot.src.substring(this.activeSlot.src.lastIndexOf('/') + 1, this.activeSlot.src.lastIndexOf('.'))
+        : 'unknown';
       this.activeSlot.element.style.opacity = '0';
       this.activeSlot.element.style.zIndex = '-1';
       this.activeSlot.element.pause();
@@ -254,51 +274,51 @@ class VideoPool {
     this.activeSlot = slot;
     slot.status = 'active';
     slot.element.muted = muted;
-    
+
     if (muted) {
       slot.element.setAttribute('muted', '');
     } else {
       slot.element.removeAttribute('muted');
     }
 
-    // Apply start time if needed
-    if (startTime > 0 && Math.abs(slot.element.currentTime - startTime) > 0.3) {
-      console.log(`⏩ Seeking to ${startTime}s in ${videoName}`);
-      slot.element.currentTime = startTime;
-    }
-
     // Set up ended callback
     if (onEnded) {
-      // Remove any existing ended listeners first
       const existingHandlers = slot.element._endedHandlers || [];
       existingHandlers.forEach(handler => {
         slot.element.removeEventListener('ended', handler);
       });
-      
+
       const endedHandler = () => {
-        console.log(`🏁 Video ended: ${videoName}`);
         onEnded();
-        // Clean up after firing
         slot.element.removeEventListener('ended', endedHandler);
         const idx = (slot.element._endedHandlers || []).indexOf(endedHandler);
         if (idx > -1) slot.element._endedHandlers.splice(idx, 1);
       };
-      
-      // Track handlers to prevent duplicates
+
       if (!slot.element._endedHandlers) slot.element._endedHandlers = [];
       slot.element._endedHandlers.push(endedHandler);
-      
       slot.element.addEventListener('ended', endedHandler, { once: true });
     }
 
-    // Show and play
+    // ─── attemptPlay ──────────────────────────────────────────────────────────
+    // Central play function. Always checks controllerPaused before doing
+    // anything. All async paths funnel through here.
     const attemptPlay = () => {
-      slot.element.style.zIndex = '1000'; // High z-index when active
       
+      // THE KEY GUARD: if paused at any point, abort.
+      if (controllerPaused) {
+        return;
+      }
+
+      slot.element.style.zIndex = '1000';
+
       if (fadeIn) {
-        // Smooth fade in
         requestAnimationFrame(() => {
-          slot.element.style.opacity = '1';
+          // Double-check: user may have paused between rAF scheduling and fire
+          if (!controllerPaused) {
+            slot.element.style.opacity = '1';
+          } else {
+          }
         });
       } else {
         slot.element.style.opacity = '1';
@@ -308,16 +328,15 @@ class VideoPool {
       if (playPromise) {
         playPromise
           .then(() => {
-            console.log(`✅ Playing: ${videoName} (slot ${slot.index}, muted: ${muted})`);
             if (onReady) onReady();
           })
           .catch((err) => {
             console.error(`❌ Play error for ${videoName}:`, err.name);
-            if (err.name === 'AbortError') {
-              console.log(`🔄 Retrying play for ${videoName}...`);
-              // Retry once
-              setTimeout(() => {
-                if (slot.status === 'active') {
+            if (err.name === 'AbortError' && !controllerPaused) {
+              // Store the timeout ID so pause() can cancel it
+              pendingRetryTimeout = setTimeout(() => {
+                pendingRetryTimeout = null;
+                if (slot.status === 'active' && !controllerPaused) {
                   slot.element.play().catch(() => {});
                 }
               }, 200);
@@ -326,21 +345,84 @@ class VideoPool {
       }
     };
 
-    if (slot.element.readyState >= 3) {
-      // Already ready - play immediately
-      console.log(`⚡ Video ready immediately: ${videoName}`);
-      attemptPlay();
-    } else {
-      console.log(`⏳ Waiting for video to be ready: ${videoName}`);
-      // Wait for ready
-      slot.element.addEventListener('canplay', attemptPlay, { once: true });
-    }
+    // ──────────────────────────────────────────────────────────────────────────
 
+    // ─── seekAndPlay ──────────────────────────────────────────────────────────
+    const seekAndPlay = (targetTime) => {
+      if (targetTime <= 0.05) {
+        // Fast path: no seek needed
+        if (slot.element.readyState >= 3) {
+          attemptPlay();
+        } else {
+          // Store handler so pause() can remove it
+          pendingCanplayHandler = () => {
+            pendingCanplayHandler = null;
+            attemptPlay(); // guarded inside
+          };
+          slot.element.addEventListener('canplay', pendingCanplayHandler, { once: true });
+        }
+        return;
+      }
+
+      // Check if already at target
+      const distanceFromCurrent = Math.abs(slot.element.currentTime - targetTime);
+      if (distanceFromCurrent < 0.05) {
+        if (slot.element.readyState >= 3) {
+          attemptPlay();
+        } else {
+          pendingCanplayHandler = () => {
+            pendingCanplayHandler = null;
+            attemptPlay();
+          };
+          slot.element.addEventListener('canplay', pendingCanplayHandler, { once: true });
+        }
+        return;
+      }
+
+      // Seek path: reveal only after seeked fires
+
+      // Store handler so pause() can remove it before it fires
+      pendingSeekHandler = () => {
+        pendingSeekHandler = null;
+        attemptPlay(); // guarded inside
+      };
+
+      slot.element.addEventListener('seeked', pendingSeekHandler, { once: true });
+      slot.element.currentTime = targetTime;
+    };
+
+    // ──────────────────────────────────────────────────────────────────────────
+
+    seekAndPlay(startTime);
+
+    // ─── Returned controller ──────────────────────────────────────────────────
     return {
       element: slot.element,
-      pause: () => slot.element.pause(),
-      play: () => slot.element.play().catch(() => {}),
-      seek: (time) => { slot.element.currentTime = time; },
+      pause: () => {
+        controllerPaused = true;
+        // Cancel everything that could call attemptPlay later
+        cancelPendingPlay();
+        slot.element.pause();
+      },
+      play: () => {
+        if (!controllerPaused) {
+          // Already playing (or trying to) — no-op to avoid double play
+          return;
+        }
+        controllerPaused = false;
+        // Resume from wherever the video currently is
+        // Make sure video is visible before playing
+        slot.element.style.zIndex = '1000';
+        slot.element.style.opacity = '1';
+        slot.element.play().catch(err => {
+          console.error(`❌ Resume play error for ${videoName}:`, err.name);
+        });
+      },
+      seek: (time) => {
+        // Cancel any in-flight seek/play sequence before starting a new one
+        cancelPendingPlay();
+        slot.element.currentTime = time;
+      },
       setMuted: (val) => {
         slot.element.muted = val;
         if (val) {
@@ -350,11 +432,15 @@ class VideoPool {
         }
       },
       hide: () => {
+        // Full teardown: cancel pending ops, pause, hide
+        controllerPaused = true;
+        cancelPendingPlay();
         slot.element.style.opacity = '0';
         slot.element.style.zIndex = '-1';
         slot.element.pause();
       },
     };
+    // ──────────────────────────────────────────────────────────────────────────
   }
 
   /**

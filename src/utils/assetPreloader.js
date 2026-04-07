@@ -30,17 +30,14 @@ class AssetPreloader {
     
     // Already loaded or loading
     if (this.imageCache.has(src)) {
-      console.log(`✅ Image already cached: ${imageName}`);
       return Promise.resolve(true);
     }
 
     // Check if already loading
     if (this.loadingPromises.has(`img:${src}`)) {
-      console.log(`⏳ Image already loading: ${imageName}`);
       return this.loadingPromises.get(`img:${src}`);
     }
 
-    console.log(`📥 Preloading image: ${imageName}`);
 
     const promise = new Promise((resolve) => {
       const img = new Image();
@@ -50,7 +47,6 @@ class AssetPreloader {
       img.onload = () => {
         this.imageCache.set(src, img);
         this.loadingPromises.delete(`img:${src}`);
-        console.log(`✅ Image loaded: ${imageName}`);
         resolve(true);
       };
       
@@ -77,17 +73,14 @@ class AssetPreloader {
     
     // Already loaded or loading
     if (this.audioCache.has(src)) {
-      console.log(`✅ Audio already cached: ${audioName}`);
       return Promise.resolve(true);
     }
 
     // Check if already loading
     if (this.loadingPromises.has(`audio:${src}`)) {
-      console.log(`⏳ Audio already loading: ${audioName}`);
       return this.loadingPromises.get(`audio:${src}`);
     }
 
-    console.log(`📥 Preloading audio: ${audioName}`);
 
     const promise = new Promise((resolve) => {
       const audio = new Audio();
@@ -100,7 +93,6 @@ class AssetPreloader {
         
         if (success) {
           this.audioCache.set(src, audio);
-          console.log(`✅ Audio loaded: ${audioName}`);
         } else {
           console.error(`❌ Audio load error: ${audioName}`);
         }
@@ -282,7 +274,6 @@ class AssetPreloader {
    * This is what Instagram/TikTok do - load all content upfront
    */
   async preloadEverything() {
-    console.log('🚀 Starting aggressive preload of ALL assets...');
     const startTime = performance.now();
     
     await Promise.all([
@@ -292,8 +283,6 @@ class AssetPreloader {
     ]);
     
     const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-    console.log(`✅ All assets preloaded in ${duration}s`);
-    console.log(`📊 Cache status:`, this.getStatus());
   }
 
   /**
