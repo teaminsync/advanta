@@ -34,18 +34,23 @@ export const LEVEL_BACKGROUNDS = [
 
 // Use merged videos with built-in background music for ALL platforms
 // This ensures consistent audio experience across iOS, Android, and Desktop
-// All videos use Cloudinary optimizations (q_auto/f_auto) for best performance
+// Aggressive Cloudinary optimizations for low-end devices and poor networks:
+// - q_50: 50% quality (good balance between quality and size)
+// - br_800k: 800kbps bitrate (reduces file size significantly)
+// - vc_h264: H.264 codec (best compatibility and compression)
+// - w_1280: Max width 1280px (mobile-optimized)
+// - f_mp4: Force MP4 format
 export const APP_VIDEOS = {
-  intro: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_auto/f_auto/v1775468799/Frame_1_IPhone_otzyv8.mp4',
-  languageBg: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_auto/f_auto/v1775460683/Bg_compressed_1_fectii.mp4',
-  challengeIntro: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502680/Frame_5_with_BGM_rigllf.mp4',
-  transitionQ2: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502673/Frame_6_with_BGM_e6emia.mp4',
-  transitionQ3: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502679/Frame_7_with_BGM_mvw6ft.mp4',
-  transitionQ4: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502677/Frame_8_with_BGM_omdddw.mp4',
-  transitionQ5: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502673/Frame_9_with_BGM_jr4uth.mp4',
-  finalTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502682/Frame_10_with_BGM_qqwir2.mp4',
-  postAnimationTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502692/Frame_11_with_BGM_qki7by.mp4',
-  end: 'https://res.cloudinary.com/datpljxkg/video/upload/q_auto/f_auto/v1775502706/Frame_12_with_BGM_oevxb3.mp4',
+  intro: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775468799/Frame_1_IPhone_otzyv8.mp4',
+  languageBg: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775460683/Bg_compressed_1_fectii.mp4',
+  challengeIntro: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502680/Frame_5_with_BGM_rigllf.mp4',
+  transitionQ2: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502673/Frame_6_with_BGM_e6emia.mp4',
+  transitionQ3: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502679/Frame_7_with_BGM_mvw6ft.mp4',
+  transitionQ4: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502677/Frame_8_with_BGM_omdddw.mp4',
+  transitionQ5: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502673/Frame_9_with_BGM_jr4uth.mp4',
+  finalTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502682/Frame_10_with_BGM_qqwir2.mp4',
+  postAnimationTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502692/Frame_11_with_BGM_qki7by.mp4',
+  end: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502706/Frame_12_with_BGM_oevxb3.mp4',
 };
 
 // No longer need platform-specific overrides - all videos have merged audio

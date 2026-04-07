@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LanguageProvider, useLanguage, useGameState } from './context/LanguageContext';
 import IntroVideoPage from './pages/IntroVideoPage';
 import LanguagePage from './pages/LanguagePage';
@@ -9,11 +9,25 @@ import ChallengePage from './pages/ChallengePage';
 import TransitionVideoPage from './pages/TransitionVideoPage';
 import EndPage from './pages/EndPage';
 import FinalAnimationPage from './pages/FinalAnimationPage';
-import { APP_AUDIO, APP_IMAGES, APP_VIDEOS, LEVEL_TRANSITION_VIDEOS, LEVEL_BACKGROUNDS, getPreferredVideoSrc } from './config/media';
-import { preloadVideo } from './utils/preloadMedia';
+import { APP_AUDIO, APP_VIDEOS, LEVEL_TRANSITION_VIDEOS, getPreferredVideoSrc } from './config/media';
+import videoPool from './utils/videoPool';
+import assetPreloader from './utils/assetPreloader';
 
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwRxfr0E97JmFltogq6PzfLLhe3XnjLLwzqCUvQsw-HNkvloF50oGGozU6FkghVilUF/exec';
 const NORMAL_FRAME_9_VIDEO = APP_VIDEOS.transitionQ5;
+
+// Master ordered list of all videos for bidirectional preloading
+const ALL_VIDEOS_IN_ORDER = [
+  APP_VIDEOS.challengeIntro,
+  APP_VIDEOS.transitionQ2,
+  APP_VIDEOS.transitionQ3,
+  APP_VIDEOS.transitionQ4,
+  APP_VIDEOS.transitionQ5,
+  APP_VIDEOS.finalTransition,
+  APP_VIDEOS.postAnimationTransition,
+  APP_VIDEOS.end,
+];
+
 const PREVIOUS_TRANSITION_CONFIG = {
   0: { page: 'challengeIntroPage', startTime: 7.2 },
   1: { videoSrc: APP_VIDEOS.transitionQ2, level: 0, startTime: 4 },
@@ -26,7 +40,6 @@ function AppContent() {
 
   const [page, setPage] = useState('introVideo');
   const [prevPage, setPrevPage] = useState(null);
-  const [currentUser, setCurrentUser] = useState({ name: '', phone: '', district: '', state: '' });
   const [currentLevel, setCurrentLevel] = useState(0);
   const [happinessScore, setHappinessScore] = useState(50);
   const [bubbleTrail, setBubbleTrail] = useState([]);
@@ -100,64 +113,104 @@ function AppContent() {
 
 
 
+  // COMPREHENSIVE ASSET PRELOADING
+  // Preloads videos, images, audio for current, next, and previous pages
+  // This ensures ZERO lag on any page transition
   useEffect(() => {
-    const upcomingVideoSources = [];
-    const upcomingImages = [];
+    // Preload videos (handled by video pool)
+    const currentVideoSrc = transitionVideoSrc || (page === 'challengeIntroPage' ? APP_VIDEOS.challengeIntro : null);
+    if (currentVideoSrc) {
+      const idx = ALL_VIDEOS_IN_ORDER.indexOf(currentVideoSrc);
+      if (idx !== -1) {
+        // Preload previous, current, next videos
+        const videosToPreload = [
+          idx > 0 ? ALL_VIDEOS_IN_ORDER[idx - 1] : null,
+          ALL_VIDEOS_IN_ORDER[idx],
+          ALL_VIDEOS_IN_ORDER[idx + 1],
+        ].filter(Boolean).map(src => getPreferredVideoSrc(src, isIOSLikeDevice));
 
-    // Preload Frame 5 (challengeIntro) when user is on form page
+        videosToPreload.forEach(src => videoPool.preload(src));
+      }
+    }
+
+    // Preload page-specific videos
     if (page === 'formPage') {
-      upcomingVideoSources.push(APP_VIDEOS.challengeIntro);
-      upcomingImages.push(LEVEL_BACKGROUNDS[0]); // First challenge background
+      const challengeIntroSrc = getPreferredVideoSrc(APP_VIDEOS.challengeIntro, isIOSLikeDevice);
+      videoPool.preload(challengeIntroSrc);
     }
 
     if (page === 'challengeIntroPage' || page === 'challengePage') {
-      // Preload next transition video
-      upcomingVideoSources.push(LEVEL_TRANSITION_VIDEOS[currentLevel]);
+      if (LEVEL_TRANSITION_VIDEOS[currentLevel]) {
+        const nextSrc = getPreferredVideoSrc(LEVEL_TRANSITION_VIDEOS[currentLevel], isIOSLikeDevice);
+        videoPool.preload(nextSrc);
+      }
       
-      // Preload next challenge background
-      if (currentLevel + 1 < t.levels.length) {
-        upcomingImages.push(LEVEL_BACKGROUNDS[currentLevel + 1]);
+      if (currentLevel > 0 && LEVEL_TRANSITION_VIDEOS[currentLevel - 1]) {
+        const prevSrc = getPreferredVideoSrc(LEVEL_TRANSITION_VIDEOS[currentLevel - 1], isIOSLikeDevice);
+        videoPool.preload(prevSrc);
       }
       
       if (currentLevel + 1 >= t.levels.length) {
-        upcomingVideoSources.push(APP_VIDEOS.finalTransition);
+        const finalSrc = getPreferredVideoSrc(APP_VIDEOS.finalTransition, isIOSLikeDevice);
+        videoPool.preload(finalSrc);
       }
     }
 
     if (page === 'transitionVideo') {
-      // Preload next challenge background
-      if (currentLevel + 1 < t.levels.length) {
-        upcomingImages.push(LEVEL_BACKGROUNDS[currentLevel + 1]);
+      // Preload NEXT video (forward navigation)
+      if (currentLevel + 2 < t.levels.length && LEVEL_TRANSITION_VIDEOS[currentLevel + 1]) {
+        const nextSrc = getPreferredVideoSrc(LEVEL_TRANSITION_VIDEOS[currentLevel + 1], isIOSLikeDevice);
+        videoPool.preload(nextSrc);
+      } else if (currentLevel + 2 >= t.levels.length) {
+        const finalSrc = getPreferredVideoSrc(APP_VIDEOS.finalTransition, isIOSLikeDevice);
+        const postSrc = getPreferredVideoSrc(APP_VIDEOS.postAnimationTransition, isIOSLikeDevice);
+        videoPool.preload(finalSrc);
+        videoPool.preload(postSrc);
       }
       
-      // Preload next transition video
-      if (currentLevel + 2 < t.levels.length) {
-        upcomingVideoSources.push(LEVEL_TRANSITION_VIDEOS[currentLevel + 1]);
-      } else if (currentLevel + 2 >= t.levels.length) {
-        upcomingVideoSources.push(APP_VIDEOS.finalTransition, APP_VIDEOS.postAnimationTransition);
+      // Preload PREVIOUS video (backward navigation) - CRITICAL FIX!
+      if (currentLevel > 0 && LEVEL_TRANSITION_VIDEOS[currentLevel - 1]) {
+        const prevSrc = getPreferredVideoSrc(LEVEL_TRANSITION_VIDEOS[currentLevel - 1], isIOSLikeDevice);
+        videoPool.preload(prevSrc);
+      } else if (currentLevel === 0) {
+        // If on first transition video, preload challenge intro (Frame 5)
+        const challengeIntroSrc = getPreferredVideoSrc(APP_VIDEOS.challengeIntro, isIOSLikeDevice);
+        videoPool.preload(challengeIntroSrc);
       }
     }
 
     if (page === 'finalTransitionVideo') {
-      upcomingVideoSources.push(NORMAL_FRAME_9_VIDEO);
+      // Preload previous video (backward navigation)
+      const normalSrc = getPreferredVideoSrc(NORMAL_FRAME_9_VIDEO, isIOSLikeDevice);
+      videoPool.preload(normalSrc);
     }
 
     if (page === 'finalAnimationPage') {
-      upcomingVideoSources.push(APP_VIDEOS.postAnimationTransition, APP_VIDEOS.end);
+      const postSrc = getPreferredVideoSrc(APP_VIDEOS.postAnimationTransition, isIOSLikeDevice);
+      videoPool.preload(postSrc);
+      // Don't preload Frame 12 yet - it would overwrite Frame 11!
+      // Frame 12 will be preloaded when we reach postAnimationTransitionVideo
+      
+      // Preload previous video (Frame 10) for backward navigation
+      const finalSrc = getPreferredVideoSrc(APP_VIDEOS.finalTransition, isIOSLikeDevice);
+      videoPool.preload(finalSrc);
+    }
+    
+    if (page === 'postAnimationTransitionVideo') {
+      const endSrc = getPreferredVideoSrc(APP_VIDEOS.end, isIOSLikeDevice);
+      videoPool.preload(endSrc);
+      
+      // Preload previous video (Frame 10) for backward navigation
+      const finalSrc = getPreferredVideoSrc(APP_VIDEOS.finalTransition, isIOSLikeDevice);
+      videoPool.preload(finalSrc);
     }
 
-    // Preload videos
-    upcomingVideoSources.filter(Boolean).forEach((src) => {
-      const preferredSrc = getPreferredVideoSrc(src, isIOSLikeDevice);
-      preloadVideo(preferredSrc);
-    });
+    // CRITICAL: Preload assets for next AND previous pages
+    // This ensures instant transitions in both directions
+    assetPreloader.preloadNextPageAssets(page, currentLevel);
+    assetPreloader.preloadPreviousPageAssets(page, currentLevel);
 
-    // Preload images
-    upcomingImages.filter(Boolean).forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, [currentLevel, page, t.levels.length, isIOSLikeDevice]);
+  }, [currentLevel, page, t.levels.length, isIOSLikeDevice, transitionVideoSrc]);
 
   const handleIntroVideoComplete = () => {
     transitionToPage('languagePage');
@@ -169,12 +222,15 @@ function AppContent() {
 
   const handleInstructionNext = () => {
     transitionToPage('formPage');
+    
+    // Start preloading UI assets while user fills form
+    // This gives us extra time to load everything
+    assetPreloader.preloadUIAssets();
+    assetPreloader.preloadAudioAssets();
   };
 
   const handleFormSubmit = (userData) => {
-    setCurrentUser(userData);
     submitUserToSheet(userData, 'lose');
-
     startGame();
   };
 
@@ -187,21 +243,18 @@ function AppContent() {
     setChallengeIntroStartTime(0);
     transitionToPage('challengeIntroPage');
     
-    // Preload all challenge transition videos at game start
-    LEVEL_TRANSITION_VIDEOS.forEach((videoSrc) => {
+    // SMART PRELOADING: Only load first 3 videos (Instagram/TikTok strategy)
+    // Don't overload the pool - let the navigation preloading handle the rest
+    const firstThreeVideos = ALL_VIDEOS_IN_ORDER.slice(0, 3);
+    firstThreeVideos.forEach((videoSrc) => {
       if (videoSrc) {
         const preferredSrc = getPreferredVideoSrc(videoSrc, isIOSLikeDevice);
-        preloadVideo(preferredSrc);
+        videoPool.preload(preferredSrc);
       }
     });
     
-    // Preload all level backgrounds at game start
-    LEVEL_BACKGROUNDS.forEach((bgSrc) => {
-      if (bgSrc) {
-        const img = new Image();
-        img.src = bgSrc;
-      }
-    });
+    // Images, Audio, Backgrounds - these are small, load all
+    assetPreloader.preloadEverything();
   };
 
   const handleIntroComplete = () => {
@@ -213,18 +266,6 @@ function AppContent() {
 
   const handleChallengeIntroPrevious = () => {
     transitionToPage('formPage');
-  };
-
-  const goToTransitionVideoAt = (videoIndex) => {
-    const targetVideoSrc = LEVEL_TRANSITION_VIDEOS[videoIndex];
-    if (!targetVideoSrc) return false;
-
-    setCurrentLevel(videoIndex);
-    setTransitionVideoSrc(targetVideoSrc);
-    setTransitionVideoStartTime(0);
-    setVideoNavigationMode('browse');
-    transitionToPage('transitionVideo');
-    return true;
   };
 
   const rewindProgressToLevel = (targetLevel) => {
@@ -244,6 +285,11 @@ function AppContent() {
 
   const handlePreviousVideo = () => {
     rewindProgressToLevel(currentLevel);
+
+    // CRITICAL FIX: Set unmute flags for backward navigation (user gesture context)
+    // This ensures videos play with audio when pressing back button
+    setShouldUnmuteTransitionVideo(true);
+    setShouldUnmuteChallengeIntro(true);
 
     if (page === 'transitionVideo') {
       const currentVideoIndex = LEVEL_TRANSITION_VIDEOS.indexOf(transitionVideoSrc);
@@ -309,7 +355,6 @@ function AppContent() {
 
   const handleRestartGame = () => {
     setPage('introVideo');
-    setCurrentUser({ name: '', phone: '', district: '', state: '' });
     setCurrentLevel(0);
     setHappinessScore(50);
     setBubbleTrail([]);
@@ -349,6 +394,7 @@ function AppContent() {
     }
 
     const videoSrc = currentLevel === 3 ? NORMAL_FRAME_9_VIDEO : LEVEL_TRANSITION_VIDEOS[currentLevel];
+    
     if (videoSrc) {
       setTransitionVideoSrc(videoSrc);
       setTransitionVideoStartTime(0);
@@ -428,6 +474,9 @@ function AppContent() {
     transitionToPage('endPage');
   };
 
+  // CRITICAL FIX: Removed videoSrc from TransitionVideoPage keys
+  // This prevents React from destroying/recreating video elements on navigation
+  // Video elements now persist and swap src imperatively for instant playback
   const renderPage = (pageName, isActive) => {
     switch (pageName) {
       case 'introVideo':
@@ -476,7 +525,7 @@ function AppContent() {
       case 'transitionVideo':
         return (
           <TransitionVideoPage
-            key={`transitionVideo-${transitionVideoSrc}`}
+            key="transitionVideo"
             isActive={isActive}
             videoSrc={transitionVideoSrc}
             initialSeekTime={transitionVideoStartTime}
@@ -526,7 +575,10 @@ function AppContent() {
           />
         );
       case 'endPage':
-        return <EndPage key="endPage" isActive={isActive} onProceed={() => { window.location.href = 'https://wa.me/919887091390'; }} />;
+        return <EndPage key="endPage" isActive={isActive} onProceed={() => { 
+          const message = 'इस मज़ेदार खेल में शामिल होने और सुपर चुनाव करने के लिए धन्यवाद।\nअब बारी है जम्बो कैशबैक जीतने के मौके की।\nअपनी जानकारी भरें और कैशबैक पाने का मौका पाएं।';
+          window.location.href = `https://wa.me/919887091390?text=${encodeURIComponent(message)}`; 
+        }} />;
       default:
         return null;
     }
@@ -552,9 +604,15 @@ function AppContent() {
 
 function App() {
   const audioRef = useRef(null);
-  const { shouldMuteAll, isGamePaused, hasUserInteracted, setOnFirstInteractionCallback } = useGameState();
+  const { shouldMuteAll, hasUserInteracted, setOnFirstInteractionCallback } = useGameState();
   const { isIOSLikeDevice } = useLanguage();
   const [isOnVideoPage, setIsOnVideoPage] = useState(false);
+
+  // CRITICAL: Initialize video pool at app mount (before any user interaction)
+  // This creates the 3 persistent video elements that Instagram/TikTok use
+  useEffect(() => {
+    videoPool.init();
+  }, []);
 
   // Watch for page changes via the hidden div
   useEffect(() => {

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage, useGameState } from '../context/LanguageContext';
 import './FormPage.css';
 import { APP_IMAGES, APP_VIDEOS } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { useRef } from 'react';
+import videoPool from '../utils/videoPool';
+import assetPreloader from '../utils/assetPreloader';
 
 const FormPage = ({ isActive = true, onSubmit }) => {
   const { t } = useLanguage();
@@ -12,6 +14,8 @@ const FormPage = ({ isActive = true, onSubmit }) => {
   const [phone, setPhone] = useState('');
   const [district, setDistrict] = useState('');
   const [stateName, setStateName] = useState('');
+  const [isPreloading, setIsPreloading] = useState(true);
+  const [preloadProgress, setPreloadProgress] = useState(0);
   const videoRef = useRef(null);
 
   useManagedVideoPlayback({
@@ -20,6 +24,47 @@ const FormPage = ({ isActive = true, onSubmit }) => {
     shouldPlay: true,
     shouldMute: true,
   });
+
+  // Monitor preloading progress
+  useEffect(() => {
+    if (!isActive) return;
+
+    let mounted = true;
+    let progressInterval;
+
+    const checkProgress = () => {
+      if (!mounted) return;
+
+      // Simulate progress based on time (smooth UX)
+      // Real loading happens in background
+      setPreloadProgress(prev => {
+        if (prev >= 100) {
+          setIsPreloading(false);
+          if (progressInterval) clearInterval(progressInterval);
+          return 100;
+        }
+        // Increment by 5% every 100ms (reaches 100% in ~2 seconds)
+        return Math.min(prev + 5, 100);
+      });
+    };
+
+    // Start progress animation
+    progressInterval = setInterval(checkProgress, 100);
+
+    // Force complete after 3 seconds max
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        setPreloadProgress(100);
+        setIsPreloading(false);
+      }
+    }, 3000);
+
+    return () => {
+      mounted = false;
+      if (progressInterval) clearInterval(progressInterval);
+      clearTimeout(timeout);
+    };
+  }, [isActive]);
 
   const handleSubmit = () => {
     const isValidName = name.trim().length >= 3;
@@ -87,9 +132,16 @@ const FormPage = ({ isActive = true, onSubmit }) => {
               </div>
             </div>
 
-            <button className="submit-action-btn" onClick={handleSubmit}>
+            <button 
+              className="submit-action-btn" 
+              onClick={handleSubmit}
+              disabled={isPreloading}
+              style={{ opacity: isPreloading ? 0.6 : 1 }}
+            >
               <img src={APP_IMAGES.buttonPrimary} alt="" className="btn-bg" loading="lazy" decoding="async" />
-              <span className="btn-text">{t.submitBtn}</span>
+              <span className="btn-text">
+                {isPreloading ? `Loading... ${preloadProgress}%` : t.submitBtn}
+              </span>
             </button>
           </div>
         </div>

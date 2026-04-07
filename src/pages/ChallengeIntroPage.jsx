@@ -1,109 +1,100 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage, useGameState } from '../context/LanguageContext';
 import './ChallengeIntroPage.css';
 import './TransitionVideoPage.css';
 import './ChallengePage.css';
-import { APP_VIDEOS, getPreferredVideoSrc } from '../config/media';
-import { APP_IMAGES } from '../config/media';
+import { APP_VIDEOS, APP_IMAGES, getPreferredVideoSrc } from '../config/media';
 import HappinessMeter from '../components/HappinessMeter';
 import SettingsMenu from '../components/SettingsMenu';
-import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
+import videoPool from '../utils/videoPool';
 
-const ChallengeIntroPage = ({ isActive = true, onStart, onPrevious, onRestartGame, happinessScore, initialSeekTime = 0, navigationMode = 'flow', shouldStartUnmuted = false }) => {
-  const videoRef = useRef(null);
+/**
+ * ChallengeIntroPage - Instagram/TikTok style with video pool
+ * 
+ * ZERO BLACK SCREENS - Frame 5 loads instantly from the pool
+ */
+const ChallengeIntroPage = ({ isActive = true, onStart, onRestartGame, happinessScore, initialSeekTime = 0, navigationMode = 'flow', shouldStartUnmuted = false }) => {
+  const controllerRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
+  const hasCompletedRef = useRef(false); // Prevent multiple onStart calls
   const { isIOSLikeDevice } = useLanguage();
-  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted } = useGameState();
-  const shouldMuteVideo = shouldMuteAll || !hasUserInteracted;
+  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused } = useGameState();
   const shouldStartMuted = !shouldStartUnmuted;
   const shouldMuteNow = shouldMuteAll || shouldStartMuted;
   const videoSrc = getPreferredVideoSrc(APP_VIDEOS.challengeIntro, isIOSLikeDevice);
 
-  // Reset video ready state when video source changes
+  // INSTAGRAM-STYLE VIDEO ACTIVATION
   useEffect(() => {
-    setIsVideoReady(false);
-  }, [videoSrc]);
+    // Reset completion flag when video changes
+    hasCompletedRef.current = false;
+    
+    if (!isActive) return;
 
-  useManagedVideoPlayback({
-    videoRef,
-    isPageVisible,
-    shouldPlay: !isPaused && isVideoReady,
-    shouldMute: shouldMuteNow,
-  });
-
-  const handleVideoEnd = () => {
-    if (navigationMode === 'browse') {
-      return;
-    }
-
-    onStart();
-  };
-
-  const handleTogglePause = () => {
-    setIsPaused((prev) => {
-      const nextIsPaused = !prev;
-
-      if (prev && videoRef.current) {
-        videoRef.current.play().catch(() => {});
-      }
-
-      return nextIsPaused;
+    const controller = videoPool.activate(videoSrc, {
+      muted: shouldMuteNow,
+      startTime: initialSeekTime,
+      onEnded: () => {
+        if (navigationMode === 'browse') return;
+        if (isActive && !hasCompletedRef.current) {
+          hasCompletedRef.current = true;
+          onStart();
+        }
+      },
+      onReady: () => {
+        // Video is ready and playing
+      },
+      fadeIn: true,
     });
-  };
 
-  const handleToggleMute = () => {
+    controllerRef.current = controller;
+
+    return () => {
+      if (controller) {
+        controller.hide();
+      }
+    };
+  }, [isActive, videoSrc, initialSeekTime, shouldMuteNow, navigationMode, onStart]);
+
+  // Handle pause/resume
+  useEffect(() => {
+    if (!controllerRef.current) return;
+
+    if (isPaused || !isPageVisible) {
+      controllerRef.current.pause();
+    } else {
+      controllerRef.current.play();
+    }
+  }, [isPaused, isPageVisible]);
+
+  // Handle mute changes
+  useEffect(() => {
+    if (!controllerRef.current) return;
+    controllerRef.current.setMuted(shouldMuteNow);
+  }, [shouldMuteNow]);
+
+  const handleTogglePause = useCallback(() => {
+    setIsPaused((prev) => !prev);
+  }, []);
+
+  const handleToggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);
-  };
+  }, [setIsMuted]);
 
   useEffect(() => {
     setIsGamePaused(isPaused);
-
     return () => {
       setIsGamePaused(false);
     };
   }, [isPaused, setIsGamePaused]);
 
-  const applyInitialSeekTime = () => {
-    const videoElement = videoRef.current;
-
-    if (!videoElement || initialSeekTime <= 0) return;
-
-    if (Math.abs(videoElement.currentTime - initialSeekTime) < 0.2) return;
-
-    try {
-      videoElement.currentTime = initialSeekTime;
-    } catch {
-      // Ignore transient seek errors until metadata is fully ready.
-    }
-  };
-
-  const handleStartClick = () => {
-    if (isPaused) return; // Don't allow navigation while paused
+  const handleStartClick = useCallback(() => {
+    if (isPaused) return;
     onStart();
-  };
+  }, [isPaused, onStart]);
 
   return (
     <div className={`page challenge-intro-video-page ${isActive ? 'active' : ''}`}>
-      <video
-        ref={videoRef}
-        className="challenge-intro-video"
-        style={{ opacity: isVideoReady ? 1 : 0, transition: 'opacity 0.3s ease-in-out' }}
-        src={videoSrc}
-        autoPlay
-        controls={false}
-        muted={shouldStartMuted}
-        playsInline
-        disablePictureInPicture
-        preload="auto"
-        onLoadedMetadata={applyInitialSeekTime}
-        onCanPlay={() => {
-          setIsVideoReady(true);
-          applyInitialSeekTime();
-        }}
-        onEnded={handleVideoEnd}
-        onError={() => {}}
-      />
+      {/* Video is rendered by the pool - we just control it */}
 
       <div className="challenge-intro-top-hud">
         <div className="hud-left">

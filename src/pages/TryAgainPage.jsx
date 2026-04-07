@@ -17,7 +17,7 @@ const TryAgainPage = ({ onRetry }) => {
 
     if (buzzAudioRef.current && !shouldMuteAll) {
         buzzAudioRef.current.currentTime = 0;
-        buzzAudioRef.current.play().catch(e => console.error(e));
+        buzzAudioRef.current.play().catch(() => {});
     }
 
     return () => {

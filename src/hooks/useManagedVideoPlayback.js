@@ -1,30 +1,63 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
+/**
+ * useManagedVideoPlayback - Optimized for mobile video playback
+ * 
+ * KEY FIXES:
+ * 1. Set muted BEFORE calling play() (iOS autoplay requirement)
+ * 2. Serialized retry logic to prevent race conditions
+ * 3. Proper cleanup of pending operations
+ */
 export const useManagedVideoPlayback = ({ videoRef, isPageVisible, shouldPlay = true, shouldMute = false }) => {
+  const retryTimeoutRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  // Cleanup helper
+  const cancelPendingRetry = () => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      cancelPendingRetry();
+    };
+  }, []);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    let retryTimeoutId;
+    // Cancel any pending retry from previous effect run
+    cancelPendingRetry();
 
     const syncPlayback = () => {
       const currentVideo = videoRef.current;
-      if (!currentVideo) return;
+      if (!currentVideo || !isMountedRef.current) return;
 
+      // CRITICAL FIX: Set muted BEFORE any play() call
+      // iOS requires muted to be set before play() for autoplay to work
       currentVideo.muted = shouldMute;
       currentVideo.defaultMuted = shouldMute;
+      
+      if (shouldMute) {
+        currentVideo.setAttribute('muted', '');
+      } else {
+        currentVideo.removeAttribute('muted');
+      }
+      
       currentVideo.autoplay = true;
       currentVideo.controls = false;
       currentVideo.disablePictureInPicture = true;
       currentVideo.playsInline = true;
       currentVideo.setAttribute('playsinline', '');
       currentVideo.setAttribute('webkit-playsinline', '');
-      if (shouldMute) {
-        currentVideo.setAttribute('muted', '');
-      } else {
-        currentVideo.removeAttribute('muted');
-      }
 
+      // Pause if we shouldn't be playing
       if (!shouldPlay || !isPageVisible) {
         if (!currentVideo.paused) {
           currentVideo.pause();
@@ -32,48 +65,57 @@ export const useManagedVideoPlayback = ({ videoRef, isPageVisible, shouldPlay = 
         return;
       }
 
+      // Wait for enough data
       if (currentVideo.readyState < 2) {
-        // Not enough data yet, the loadeddata/canplay event listeners will retry
-        return;
+        return; // Event listeners will retry when ready
       }
 
-      // Don't call play() if already playing - prevents iOS NotAllowedError when unmuting
-      // Check AFTER setting muted attribute, as changing muted can briefly pause the video
+      // Already playing - don't interrupt
       if (!currentVideo.paused) {
         return;
       }
 
+      // Attempt play
       const playPromise = currentVideo.play();
       if (playPromise !== undefined) {
         playPromise
-          .then(() => {})
+          .then(() => {
+            // Success - clear any pending retries
+            cancelPendingRetry();
+          })
           .catch((err) => {
-            // Handle AbortError (play interrupted) - retry after delay
+            if (!isMountedRef.current) return;
+            
+            // Handle AbortError (play interrupted) - retry with backoff
             if (err.name === 'AbortError') {
-              retryTimeoutId = window.setTimeout(() => {
-                if (!videoRef.current || !shouldPlay || !isPageVisible) return;
+              cancelPendingRetry();
+              retryTimeoutRef.current = setTimeout(() => {
+                if (!videoRef.current || !shouldPlay || !isPageVisible || !isMountedRef.current) return;
+                
+                // Re-apply muted state before retry
+                videoRef.current.muted = shouldMute;
                 const retryPromise = videoRef.current.play();
                 if (retryPromise) {
                   retryPromise.catch(() => {});
                 }
-              }, 200);
+              }, 300);
             }
+            // NotAllowedError = no user gesture yet; will retry on next interaction
+            // NotSupportedError = codec/src issue; nothing we can do
           });
       }
     };
 
     syncPlayback();
 
+    // Listen for readiness events
     const replayReadyEvents = ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'];
     replayReadyEvents.forEach((eventName) => {
       video.addEventListener(eventName, syncPlayback);
     });
 
     return () => {
-      if (retryTimeoutId) {
-        window.clearTimeout(retryTimeoutId);
-      }
-
+      cancelPendingRetry();
       replayReadyEvents.forEach((eventName) => {
         video.removeEventListener(eventName, syncPlayback);
       });

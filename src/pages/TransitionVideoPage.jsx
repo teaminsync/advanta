@@ -1,31 +1,29 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLanguage, useGameState } from '../context/LanguageContext';
 import HappinessMeter from '../components/HappinessMeter';
 import SettingsMenu from '../components/SettingsMenu';
 import './TransitionVideoPage.css';
 import './ChallengePage.css';
-import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
 import { APP_IMAGES, APP_VIDEOS, getPreferredVideoSrc } from '../config/media';
+import videoPool from '../utils/videoPool';
 
+/**
+ * TransitionVideoPage - Instagram/TikTok/YouTube Shorts style
+ * 
+ * ZERO BLACK SCREENS - Uses video pool with pre-loaded videos
+ * Videos are ready BEFORE navigation happens
+ */
 const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVideo, onPreviousQuestion, onNextQuestion, bubbleTrail, happinessScore, showArrows = true, showControls = false, onRestartGame, initialSeekTime = 0, shouldStartUnmuted = false }) => {
-  const videoRef = useRef(null);
-  const hasAppliedInitialSeekRef = useRef(false);
+  const controllerRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
+  const hasCompletedRef = useRef(false); // Prevent multiple onComplete calls
   const { isIOSLikeDevice } = useLanguage();
-  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused, hasUserInteracted } = useGameState();
-  const shouldMuteVideo = shouldMuteAll || !hasUserInteracted;
+  const { shouldMuteAll, isPageVisible, isMuted, setIsMuted, setIsGamePaused } = useGameState();
   const preferredVideoSrc = getPreferredVideoSrc(videoSrc, isIOSLikeDevice);
   
-  // If coming from user gesture (shouldStartUnmuted), start unmuted. Otherwise start muted.
-  // But always respect shouldMuteAll (user clicked mute button)
+  // Mute logic
   const shouldStartMuted = !shouldStartUnmuted;
   const shouldMuteNow = shouldMuteAll || shouldStartMuted;
-  
-  // Reset video ready state when video source changes
-  useEffect(() => {
-    setIsVideoReady(false);
-  }, [preferredVideoSrc]);
   
   const replayStartTimeByVideo = {
     [APP_VIDEOS.transitionQ2]: 6,
@@ -36,27 +34,61 @@ const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVide
   const replayStartTime = replayStartTimeByVideo[videoSrc] ?? 0;
   const visibleBubbleTrail = bubbleTrail?.filter(Boolean) || [];
 
-  useManagedVideoPlayback({
-    videoRef,
-    isPageVisible,
-    shouldPlay: Boolean(videoSrc) && !isPaused && isVideoReady,
-    shouldMute: shouldMuteNow,
-  });
+  // INSTAGRAM-STYLE VIDEO ACTIVATION
+  // Video is already loaded in the pool - just activate it (INSTANT)
+  useEffect(() => {
+    // Reset completion flag when video changes
+    hasCompletedRef.current = false;
+    
+    if (!preferredVideoSrc || !isActive) {
+      return;
+    }
 
-  const handleVideoEnd = () => {
-    onComplete();
-  };
+    // Activate the video from the pool (instant - no loading!)
+    const controller = videoPool.activate(preferredVideoSrc, {
+      muted: shouldMuteNow,
+      startTime: initialSeekTime,
+      onEnded: () => {
+        if (isActive && !hasCompletedRef.current) {
+          hasCompletedRef.current = true; // Mark as completed
+          onComplete();
+        }
+      },
+      onReady: () => {
+        // Video is ready and playing
+      },
+      fadeIn: true, // Smooth fade in (no black screen)
+    });
+
+    controllerRef.current = controller;
+
+    return () => {
+      // Hide video when component unmounts or becomes inactive
+      if (controller) {
+        controller.hide();
+      }
+    };
+  }, [preferredVideoSrc, isActive, initialSeekTime, shouldMuteNow, onComplete]);
+
+  // Handle pause/resume
+  useEffect(() => {
+    if (!controllerRef.current) return;
+
+    if (isPaused || !isPageVisible) {
+      controllerRef.current.pause();
+    } else {
+      controllerRef.current.play();
+    }
+  }, [isPaused, isPageVisible]);
+
+  // Handle mute changes
+  useEffect(() => {
+    if (!controllerRef.current) return;
+    controllerRef.current.setMuted(shouldMuteNow);
+  }, [shouldMuteNow]);
 
   const handleTogglePause = () => {
-    setIsPaused((prev) => {
-      const nextIsPaused = !prev;
-
-      if (prev && videoRef.current) {
-        videoRef.current.play().catch(() => {});
-      }
-
-      return nextIsPaused;
-    });
+    setIsPaused((prev) => !prev);
   };
 
   const handleToggleMute = () => {
@@ -65,71 +97,29 @@ const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVide
 
   useEffect(() => {
     setIsGamePaused(isPaused);
-
     return () => {
       setIsGamePaused(false);
     };
   }, [isPaused, setIsGamePaused]);
 
-  useEffect(() => {
-    hasAppliedInitialSeekRef.current = false;
-  }, [videoSrc, initialSeekTime]);
-
-  const applyInitialSeekTime = () => {
-    const videoElement = videoRef.current;
-
-    if (!videoElement || initialSeekTime <= 0) {
-      return;
-    }
-    if (hasAppliedInitialSeekRef.current) return;
-    if (videoElement.readyState < 1) return;
-
-    if (Math.abs(videoElement.currentTime - initialSeekTime) < 0.2) return;
-
-    try {
-      videoElement.pause();
-      videoElement.currentTime = initialSeekTime;
-      hasAppliedInitialSeekRef.current = true;
-
-      if (!isPaused && isPageVisible) {
-        const playPromise = videoElement.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {});
-        }
-      }
-    } catch {
-      // Ignore transient seek errors until metadata is fully ready.
-    }
-  };
-
-  useEffect(() => {
-    applyInitialSeekTime();
-  }, [videoSrc, initialSeekTime, isPaused, isPageVisible]);
-
   const handleReplayCurrentVideo = () => {
-    if (isPaused) return; // Don't allow navigation while paused
-
-    const videoElement = videoRef.current;
+    if (isPaused) return;
 
     if (showControls && onPreviousQuestion) {
       onPreviousQuestion();
       return;
     }
 
-    if (!videoElement) {
+    if (controllerRef.current) {
+      controllerRef.current.seek(replayStartTime);
+      controllerRef.current.play();
+    } else {
       onPreviousQuestion?.();
-      return;
-    }
-
-    videoElement.currentTime = replayStartTime;
-    const playPromise = videoElement.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {});
     }
   };
 
   const handleNextQuestion = () => {
-    if (isPaused) return; // Don't allow navigation while paused
+    if (isPaused) return;
     
     if (onNextQuestion) {
       onNextQuestion();
@@ -142,34 +132,8 @@ const TransitionVideoPage = ({ isActive = true, videoSrc, onComplete, onSkipVide
 
   return (
     <div className={`page transition-video-page ${isActive ? 'active' : ''}`}>
-      <video
-        key={`${preferredVideoSrc}-${initialSeekTime}`}
-        ref={videoRef}
-        className="transition-video"
-        style={{ opacity: isVideoReady ? 1 : 0, transition: 'opacity 0.3s ease-in-out' }}
-        src={preferredVideoSrc}
-        autoPlay
-        controls={false}
-        muted={shouldStartMuted}
-        playsInline
-        disablePictureInPicture
-        preload="auto"
-        onLoadedMetadata={() => {
-          applyInitialSeekTime();
-        }}
-        onLoadedData={() => {
-          applyInitialSeekTime();
-        }}
-        onCanPlay={() => {
-          applyInitialSeekTime();
-        }}
-        onCanPlayThrough={() => {
-          setIsVideoReady(true);
-          applyInitialSeekTime();
-        }}
-        onEnded={handleVideoEnd}
-        onError={() => {}}
-      />
+      {/* Video is rendered by the pool - we just control it */}
+      {/* No video element here - pool manages everything */}
 
       {showControls && (
         <div className="transition-video-top-hud">

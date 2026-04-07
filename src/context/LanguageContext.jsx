@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, useContext, useCallback } from 'react';
+import { createContext, useEffect, useState, useContext, useCallback } from 'react';
 import hi from '../locales/hi';
 import pa from '../locales/pa';
 import { useLowPowerMode } from '../hooks/useLowPowerMode';
@@ -56,7 +56,7 @@ export function LanguageProvider({ children }) {
     if (typeof window === 'undefined') return undefined;
     if (hasUserInteracted) return undefined; // Already interacted, skip setup
 
-    const markInteracted = (event) => {
+    const markInteracted = () => {
       setHasUserInteracted(true);
       
       // Call the callback synchronously within the gesture context
