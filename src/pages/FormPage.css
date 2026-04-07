@@ -81,14 +81,14 @@
 .form-board-content {
   position: relative;
   z-index: 1;
-  width: min(100%, 20rem);
+  width: 100%;
   min-height: clamp(28.25rem, 60dvh, 32rem);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   box-sizing: border-box;
-  padding: 5.15rem clamp(1.3rem, 5vw, 2.3rem) 3rem;
+  padding: 5.15rem 12% 3rem;
 }
 
 .form-title {
@@ -104,7 +104,7 @@
 }
 
 .form-fields-container {
-  width: min(100%, 16.5rem);
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.58rem;
@@ -169,7 +169,7 @@
 
 .submit-action-btn {
   position: relative;
-  width: clamp(9.5rem, 62%, 12rem);
+  width: clamp(9.5rem, 55%, 12rem);
   height: clamp(2.7rem, 5.6vh, 3.05rem);
   margin-top: clamp(0.65rem, 1.8vh, 0.95rem);
   background: transparent;
@@ -233,9 +233,9 @@
   }
 
   .form-board-content {
-    width: min(100%, 18rem);
+    width: 100%;
     min-height: clamp(25.75rem, 56dvh, 29rem);
-    padding: 4.55rem 1.1rem 2.45rem;
+    padding: 4.55rem 10% 2.45rem;
   }
 }
 
@@ -269,8 +269,8 @@
   }
 
   .form-board-content {
-    width: min(100%, 17rem);
+    width: 100%;
     min-height: clamp(22.5rem, 70dvh, 25.5rem);
-    padding: 3.25rem 1.15rem 2.25rem;
+    padding: 3.25rem 10% 2.25rem;
   }
 }
