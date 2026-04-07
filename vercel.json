@@ -5,6 +5,7 @@
       "destination": "/index.html"
     }
   ],
+  "comment": "Test auto-deployment",
   "headers": [
     {
       "source": "/(.*)",
