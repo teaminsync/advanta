@@ -349,8 +349,12 @@ class VideoPool {
 
     // ─── seekAndPlay ──────────────────────────────────────────────────────────
     const seekAndPlay = (targetTime) => {
-      if (targetTime <= 0.05) {
-        // Fast path: no seek needed
+      // Check if already at target position
+      // This handles both forward navigation (already at 0) and backward navigation (already seeked)
+      const distanceFromCurrent = Math.abs(slot.element.currentTime - targetTime);
+      
+      if (distanceFromCurrent < 0.05) {
+        // Already at the right position - no seek needed
         if (slot.element.readyState >= 3) {
           attemptPlay();
         } else {
@@ -364,23 +368,9 @@ class VideoPool {
         return;
       }
 
-      // Check if already at target
-      const distanceFromCurrent = Math.abs(slot.element.currentTime - targetTime);
-      if (distanceFromCurrent < 0.05) {
-        if (slot.element.readyState >= 3) {
-          attemptPlay();
-        } else {
-          pendingCanplayHandler = () => {
-            pendingCanplayHandler = null;
-            attemptPlay();
-          };
-          slot.element.addEventListener('canplay', pendingCanplayHandler, { once: true });
-        }
-        return;
-      }
-
-      // Seek path: reveal only after seeked fires
-
+      // Need to seek to target position
+      // This handles: revisiting videos, backward navigation to specific timestamps
+      
       // Store handler so pause() can remove it before it fires
       pendingSeekHandler = () => {
         pendingSeekHandler = null;
@@ -473,6 +463,7 @@ class VideoPool {
    */
   cleanupSlot(slot) {
     slot.element.pause();
+    slot.element.currentTime = 0; // Reset to start so reused videos begin fresh
     slot.element.removeAttribute('src');
     slot.element.load();
     slot.src = null;
