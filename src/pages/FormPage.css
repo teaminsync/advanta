@@ -238,39 +238,3 @@
     padding: 4.55rem 10% 2.45rem;
   }
 }
-
-@media (max-height: 550px) and (orientation: landscape) {
-  .form-page-container {
-    align-items: flex-start;
-  }
-
-  .form-content-wrapper {
-    width: min(100%, 44rem);
-    min-height: auto;
-    flex-direction: row;
-    gap: 1rem;
-    align-items: center;
-    padding-block: 0;
-  }
-
-  .farmer-img-form {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    width: min(36vw, 19rem);
-    max-height: min(72dvh, 20rem);
-  }
-
-  .form-frame-wrapper {
-    width: min(44vw, 22rem);
-    min-height: clamp(25rem, 82dvh, 29rem);
-    margin-top: 0;
-  }
-
-  .form-board-content {
-    width: 100%;
-    min-height: clamp(22.5rem, 70dvh, 25.5rem);
-    padding: 3.25rem 10% 2.25rem;
-  }
-}

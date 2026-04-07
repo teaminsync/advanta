@@ -43,6 +43,7 @@ export const LEVEL_BACKGROUNDS = [
 export const APP_VIDEOS = {
   intro: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775468799/Frame_1_IPhone_otzyv8.mp4',
   languageBg: 'https://res.cloudinary.com/doaw2nfrp/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775460683/Bg_compressed_1_fectii.mp4',
+  languageBgPoster: 'https://res.cloudinary.com/doaw2nfrp/video/upload/so_0,f_jpg,q_auto,w_1280/v1775460683/Bg_compressed_1_fectii.jpg', // First frame as poster
   challengeIntro: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502680/Frame_5_with_BGM_rigllf.mp4',
   transitionQ2: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502673/Frame_6_with_BGM_e6emia.mp4',
   transitionQ3: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502679/Frame_7_with_BGM_mvw6ft.mp4',
@@ -51,6 +52,7 @@ export const APP_VIDEOS = {
   finalTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502682/Frame_10_with_BGM_qqwir2.mp4',
   postAnimationTransition: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502692/Frame_11_with_BGM_qki7by.mp4',
   end: 'https://res.cloudinary.com/datpljxkg/video/upload/q_50,br_800k,vc_h264,w_1280,f_mp4/v1775502706/Frame_12_with_BGM_oevxb3.mp4',
+  endPoster: 'https://res.cloudinary.com/datpljxkg/video/upload/so_0,f_jpg,q_auto,w_1280/v1775502706/Frame_12_with_BGM_oevxb3.jpg', // First frame as poster
 };
 
 // No longer need platform-specific overrides - all videos have merged audio

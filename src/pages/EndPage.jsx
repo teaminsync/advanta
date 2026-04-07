@@ -1,26 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage, useGameState } from '../context/LanguageContext';
 import './EndPage.css';
 import { APP_VIDEOS, getPreferredVideoSrc } from '../config/media';
 import { useManagedVideoPlayback } from '../hooks/useManagedVideoPlayback';
-import { useRef } from 'react';
 
 const EndPage = ({ isActive = true, onProceed }) => {
   const { t, isIOSLikeDevice } = useLanguage();
-  const { shouldMuteAll, isPageVisible, hasUserInteracted } = useGameState();
+  const { isPageVisible } = useGameState();
   const [isVideoEnded, setIsVideoEnded] = useState(false);
   const videoRef = useRef(null);
-  const shouldMuteVideo = shouldMuteAll || !hasUserInteracted;
+  const hasEndedRef = useRef(false);
   const videoSrc = getPreferredVideoSrc(APP_VIDEOS.end, isIOSLikeDevice);
+
+  // CRITICAL: Set muted as HTML attribute for Android WebView (Realme Browser)
+  // WebView requires the attribute, not just the property
+  // ALWAYS mute this video - background music is already playing
+  useEffect(() => {
+    if (videoRef.current) {
+      const v = videoRef.current;
+      v.muted = true;
+      v.defaultMuted = true;
+      v.setAttribute('muted', '');
+    }
+  }, []);
 
   useManagedVideoPlayback({
     videoRef,
     isPageVisible,
     shouldPlay: !isVideoEnded,
-    shouldMute: shouldMuteVideo,
+    shouldMute: true,
   });
 
   const handleVideoEnd = () => {
+    if (hasEndedRef.current) return;
+    hasEndedRef.current = true;
     setIsVideoEnded(true);
   };
 
@@ -29,10 +42,12 @@ const EndPage = ({ isActive = true, onProceed }) => {
       <video
         ref={videoRef}
         src={videoSrc}
+        poster={APP_VIDEOS.endPoster}
         className="end-video-bg"
         autoPlay
-        muted={shouldMuteVideo}
+        muted
         playsInline
+        webkit-playsinline="true"
         preload="auto"
         onEnded={handleVideoEnd}
         onError={() => {}}

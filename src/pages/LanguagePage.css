@@ -15,9 +15,6 @@
     calc(var(--safe-right) + var(--screen-pad-x))
     calc(var(--safe-bottom) + var(--screen-pad-y))
     calc(var(--safe-left) + var(--screen-pad-x));
-  
-  /* FIX: Create explicit stacking context for Samsung Internet */
-  isolation: isolate;
 }
 
 .fluid-bg {
@@ -28,9 +25,6 @@
   object-fit: cover;
   object-position: center 60%;
   z-index: -1;
-  
-  /* FIX: Prevent video from blocking clicks even if z-index fails */
-  pointer-events: none;
 }
 
 .volume-btn {
@@ -45,10 +39,6 @@
   width: clamp(46px, 12vw, 55px);
   height: clamp(46px, 12vw, 55px);
   margin: 0;
-  
-  /* FIX: Reliable tap handling on Samsung Internet */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 
 .volume-btn img {
@@ -56,9 +46,6 @@
   height: 100%;
   object-fit: contain;
   transition: transform 0.2s;
-  
-  /* FIX: Let button handle taps, not the image */
-  pointer-events: none;
 }
 
 .volume-btn:hover img {
@@ -84,9 +71,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  
-  /* FIX: Ensure board is above background video */
-  z-index: 1;
 }
 
 .board-bg {
@@ -95,9 +79,6 @@
   height: 140%;
   object-fit: contain;
   filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
-  
-  /* FIX: Decorative image shouldn't block button clicks */
-  pointer-events: none;
 }
 
 .board-content {
@@ -141,11 +122,6 @@
   border-radius: 10px;
   margin: 0;
   transition: transform 0.2s;
-  
-  /* FIX: Reliable tap handling on Samsung Internet */
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  z-index: 3;
 }
 
 .lang-option-bg {
@@ -160,9 +136,6 @@
   background-repeat: no-repeat;
   border-radius: 10px;
   z-index: 1;
-  
-  /* FIX: Let parent button handle clicks */
-  pointer-events: none;
 }
 
 .lang-option-btn:hover {
@@ -178,9 +151,6 @@
   width: 100%;
   height: 100%;
   gap: clamp(10px, 3vw, 15px);
-  
-  /* FIX: Let parent button handle clicks */
-  pointer-events: none;
 }
 
 .lang-letter {

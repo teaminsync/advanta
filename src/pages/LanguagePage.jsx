@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useLanguage, useGameState } from '../context/LanguageContext';
 import './LanguagePage.css';
 import { APP_IMAGES, APP_VIDEOS } from '../config/media';
@@ -8,6 +8,20 @@ const LanguagePage = ({ isActive = true, onComplete }) => {
   const { lang, setLang } = useLanguage();
   const { isMuted, setIsMuted, shouldMuteAll, isPageVisible } = useGameState();
   const videoRef = useRef(null);
+
+  // CRITICAL: Set muted as HTML attribute for Android WebView (Realme Browser)
+  // WebView requires the attribute, not just the property
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = shouldMuteAll;
+    v.defaultMuted = shouldMuteAll;
+    if (shouldMuteAll) {
+      v.setAttribute('muted', '');
+    } else {
+      v.removeAttribute('muted');
+    }
+  }, [shouldMuteAll]);
 
   useManagedVideoPlayback({
     videoRef,
@@ -33,11 +47,13 @@ const LanguagePage = ({ isActive = true, onComplete }) => {
         ref={videoRef}
         className="fluid-bg"
         src={APP_VIDEOS.languageBg}
+        poster={APP_VIDEOS.languageBgPoster}
         autoPlay
         loop
         controls={false}
-        muted={shouldMuteAll}
+        muted
         playsInline
+        webkit-playsinline="true"
         disablePictureInPicture
         preload="auto"
       />
