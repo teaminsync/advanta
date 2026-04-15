@@ -653,7 +653,7 @@ function App() {
       return;
     }
 
-    audioElement.volume = 0.05;
+    audioElement.volume = 0.03;
     audioElement.preload = 'auto';
     audioElement.loop = true;
     audioElement.load();
